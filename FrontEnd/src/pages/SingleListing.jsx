@@ -1,9 +1,9 @@
-import  { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify';
 import AppContext from '../context/AppContext';
 import axios from 'axios';
-import { MapPin, Calendar, Home, Star, ArrowLeft, ArrowRight, Share2, Heart, Bookmark } from 'lucide-react';
+import { MapPin, Calendar, Home, Star, ArrowLeft, ArrowRight, Share2, Heart } from 'lucide-react';
 
 
 
@@ -11,54 +11,26 @@ function SingleListing() {
 
     const { id } = useParams();
 
-    const { backendUrl, userToken, userData } = useContext(AppContext);
+    const { backendUrl, userToken, userData,
+        Onelisting,
+        currentImage, setCurrentImage,
+        currentImageIndex, setCurrentImageIndex,
+        isFavorite, setIsFavorite,
+        price,
+        rating, setRating,
+        comment, setComment,
+        reviewSubLoading, setReviewSubLoading,
+        allReview, setAllReviews,
+        GetListingData,
+        isLoading,
 
-    const [listing, setListing] = useState(null);
+    } = useContext(AppContext);
 
-    const [currentImage, setCurrentImage] = useState(null);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFavorite, setIsFavorite] = useState(false);
-
-    const [price, setPrice] = useState(1);
-
-
-
-    const [rating, setRating] = useState(0);
-    const [comment, setComment] = useState("")
-    const [reviewSubLoading, setReviewSubLoading] = useState(false);
-
-    const [allReview, setAllReviews] = useState([])
-
-
-
-
-    const GetListingData = async () => {
-        setIsLoading(true);
-        try {
-            const { data } = await axios.get(`${backendUrl}/listing/${id}`)
-           // console.log("single listing data is ", data)
-            if (data.success) {
-                setListing(data.listing);
-                if (data.listing && data.listing.image && data.listing.image.length > 0) {
-                    setCurrentImage(data.listing.image[0].url);
-                }
-                setAllReviews(data.listing.reviews.reverse())
-                setPrice(data.listing.price)
-                setTotal(data.listing.price * 2);
-            } else {
-                toast.error(data.message);
-            }
-        } catch (err) {
-            toast.error(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
+console.log("one listing ",Onelisting)
     useEffect(() => {
-        GetListingData();
-        // Scroll to top when component mounts
+        if (Onelisting)
+            return
+        GetListingData(id);
         window.scrollTo(0, 0);
     }, [id]);
 
@@ -68,18 +40,18 @@ function SingleListing() {
     }
 
     const nextImage = () => {
-        if (listing && listing.image && listing.image.length > 0) {
-            const nextIndex = (currentImageIndex + 1) % listing.image.length;
+        if (Onelisting && Onelisting.image && Onelisting.image.length > 0) {
+            const nextIndex = (currentImageIndex + 1) % Onelisting.image.length;
             setCurrentImageIndex(nextIndex);
-            setCurrentImage(listing.image[nextIndex].url);
+            setCurrentImage(Onelisting.image[nextIndex].url);
         }
     }
 
     const prevImage = () => {
-        if (listing && listing.image && listing.image.length > 0) {
-            const prevIndex = (currentImageIndex - 1 + listing.image.length) % listing.image.length;
+        if (Onelisting && Onelisting.image && Onelisting.image.length > 0) {
+            const prevIndex = (currentImageIndex - 1 + Onelisting.image.length) % Onelisting.image.length;
             setCurrentImageIndex(prevIndex);
-            setCurrentImage(listing.image[prevIndex].url);
+            setCurrentImage(Onelisting.image[prevIndex].url);
         }
     }
 
@@ -170,7 +142,6 @@ function SingleListing() {
     const [from, setFrom] = useState(new Date().toISOString().split('T')[0]);
     const [to, setTo] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
     const [guestCount, setGuestCount] = useState(2);
-    const [paymentStatus, setPaymentStatus] = useState("pending")
     const [total, setTotal] = useState(1);
     const [night, setNight] = useState(2);
 
@@ -208,11 +179,9 @@ function SingleListing() {
             order_id: order.id,
             receipt: order.receipt,
             handler: async (response) => {
-               // console.log(response);
-                const token = userToken;
                 try {
                     const { data } = await axios.post(`${backendUrl}/transaction/verify`, response, { headers: { token: userToken } })
-                    
+
                     if (data.success) {
                         toast.success(data.message)
                         Navigate(`/profile/${userData._id}/all-booking`)
@@ -238,13 +207,13 @@ function SingleListing() {
                     from,
                     to
                 },
-                pricePerNight: listing.price
+                pricePerNight: Onelisting.price
 
             }
 
 
             const { data } = await axios.post(`${backendUrl}/transaction/payment/${id}`, bookingData, { headers: { token: userToken } })
-            
+
             if (data.success) {
                 initPay(data.order);
 
@@ -272,12 +241,12 @@ function SingleListing() {
         );
     }
 
-    if (!listing) {
+    if (!Onelisting) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen p-4">
                 <Home className="w-16 h-16 text-gray-400 mb-4" />
                 <h2 className="text-2xl font-semibold text-gray-700 mb-2">Listing Not Found</h2>
-                <p className="text-gray-500 mb-6">The listing you're looking for doesn't exist or has been removed.</p>
+                <p className="text-gray-500 mb-6">The listing you&apos;re looking for doesn&apos;t exist or has been removed.</p>
                 <a href="/" className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors">
                     Back to Home
                 </a>
@@ -298,10 +267,10 @@ function SingleListing() {
                 {/* Listing Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                     <div>
-                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{listing.title}</h1>
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{Onelisting.title}</h1>
                         <div className="flex items-center text-gray-600 mb-2">
                             <MapPin className="w-4 h-4 text-rose-500 mr-1" />
-                            <span>{listing.location}</span>
+                            <span>{Onelisting.location}</span>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3 mt-2 md:mt-0">
@@ -311,8 +280,8 @@ function SingleListing() {
                             onClick={() => {
                                 if (navigator.share) {
                                     navigator.share({
-                                        title: listing.title,
-                                        text: `Check out this amazing place: ${listing.title}`,
+                                        title: Onelisting.title,
+                                        text: `Check out this amazing place: ${Onelisting.title}`,
                                         url: window.location.href
                                     }).catch(err => {
                                         console.log('Error sharing:', err);
@@ -343,7 +312,7 @@ function SingleListing() {
                     <img
                         src={currentImage}
                         className="w-full h-[400px] md:h-[500px] object-cover"
-                        alt={listing.title}
+                        alt={Onelisting.title}
                     />
 
                     {/* Navigation arrows */}
@@ -366,12 +335,12 @@ function SingleListing() {
 
                     {/* Image counter */}
                     <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
-                        {currentImageIndex + 1} / {listing.image ? listing.image.length : 0}
+                        {currentImageIndex + 1} / {Onelisting.image ? Onelisting.image.length : 0}
                     </div>
                 </div>
 
                 <div className="hidden md:grid grid-cols-2 gap-4 h-[500px] overflow-y-auto">
-                    {listing.image && listing.image.map((img, i) => (
+                    {Onelisting.image && Onelisting.image.map((img, i) => (
                         <div
                             key={i}
                             className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${currentImageIndex === i ? 'ring-2 ring-rose-500' : 'hover:opacity-90'}`}
@@ -379,7 +348,7 @@ function SingleListing() {
                         >
                             <img
                                 src={img.url}
-                                alt={`View of ${listing.title} - ${i + 1}`}
+                                alt={`View of ${Onelisting.title} - ${i + 1}`}
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -389,7 +358,7 @@ function SingleListing() {
 
             {/* Mobile Thumbnails */}
             <div className="flex md:hidden overflow-x-auto space-x-2 pb-4 mb-6">
-                {listing.image && listing.image.map((img, i) => (
+                {Onelisting.image && Onelisting.image.map((img, i) => (
                     <div
                         key={i}
                         className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${currentImageIndex === i ? 'ring-2 ring-rose-500' : 'hover:opacity-90'}`}
@@ -397,7 +366,7 @@ function SingleListing() {
                     >
                         <img
                             src={img.url}
-                            alt={`View of ${listing.title} - ${i + 1}`}
+                            alt={`View of ${Onelisting.title} - ${i + 1}`}
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -410,7 +379,7 @@ function SingleListing() {
                     <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                         <h2 className="text-xl font-semibold mb-4">About this place</h2>
                         <p className="text-gray-700 mb-6 leading-relaxed">
-                            {listing.description || 'No description provided for this listing.'}
+                            {Onelisting.description || 'No description provided for this listing.'}
                         </p>
 
                         <div className="border-t border-gray-100 pt-6">
@@ -420,14 +389,14 @@ function SingleListing() {
                                     <Home className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
                                     <div>
                                         <p className="text-sm text-gray-500">Property type</p>
-                                        <p className="font-medium">{listing.category || 'Home'}</p>
+                                        <p className="font-medium">{Onelisting.category || 'Home'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start">
                                     <Calendar className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
                                     <div>
                                         <p className="text-sm text-gray-500">Listed on</p>
-                                        <p className="font-medium">{new Date(listing.date).toLocaleDateString()}</p>
+                                        <p className="font-medium">{new Date(Onelisting.date).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                             </div>
@@ -439,7 +408,7 @@ function SingleListing() {
                     <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
                         <div className="flex items-baseline justify-between mb-4">
                             <div className="flex items-center">
-                                <span className="text-2xl font-bold">₹{listing.price}</span>
+                                <span className="text-2xl font-bold">₹{Onelisting.price}</span>
                                 <span className="text-gray-600 ml-1">/night</span>
                             </div>
                             <div className="flex items-center">
@@ -451,7 +420,6 @@ function SingleListing() {
 
                         <form onSubmit={(e) => {
                             e.preventDefault();
-                            address: listing.location
 
 
                         }}>
@@ -477,11 +445,11 @@ function SingleListing() {
                                         }
                                     </select>
                                 </div>
-                                {listing.currentBooking.find(
+                                {Onelisting.currentBooking.find(
                                     booking =>
                                         new Date(booking.bookingDuration.from) <= new Date(to) &&
                                         new Date(booking.bookingDuration.to) >= new Date(from)
-                                ) ? listing.isBook === userData?._id ? (
+                                ) ? Onelisting.isBook === userData?._id ? (
                                     // 🟩 If current user already booked it
                                     <div className="text-center p-4 bg-green-50 rounded-lg">
                                         <h2 className="text-xl font-semibold text-green-700">
@@ -521,7 +489,7 @@ function SingleListing() {
 
                                 <div className="border-t border-gray-100 mt-6 pt-4">
                                     <div className="flex justify-between mb-2">
-                                        <span>₹{listing.price} × {night} nights</span>
+                                        <span>₹{Onelisting.price} × {night} nights</span>
                                         <span>₹{total}</span>
                                     </div>
                                     <div className="flex justify-between mb-2">
@@ -530,7 +498,7 @@ function SingleListing() {
                                     </div>
                                     <div className="flex justify-between mb-2">
                                         <span>Service fee</span>
-                                        <span>₹{Math.round(listing.price * 5 * 0.12)}</span>
+                                        <span>₹{Math.round(Onelisting.price * 5 * 0.12)}</span>
                                     </div>
                                     <div className="border-t border-gray-100 mt-4 pt-4 flex justify-between font-bold">
                                         <span>Total</span>
@@ -559,7 +527,7 @@ function SingleListing() {
                         <div className="flex items-start space-x-3 mb-4">
                             <MapPin className="w-5 h-5 text-rose-500 mt-1" />
                             <div>
-                                <h3 className="font-medium text-gray-900">{listing.location}</h3>
+                                <h3 className="font-medium text-gray-900">{Onelisting.location}</h3>
                                 <p className="text-gray-600 text-sm">Exact location provided after booking</p>
                             </div>
                         </div>
@@ -569,7 +537,7 @@ function SingleListing() {
                             <iframe
                                 title="Property Location"
                                 className="w-full h-full border-0"
-                                src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                                src={`https://maps.google.com/maps?q=${encodeURIComponent(Onelisting.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                                 allowFullScreen=""
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"

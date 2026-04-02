@@ -1,4 +1,4 @@
-import  { useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import HomeIcon from '@mui/icons-material/Home';
 import DoorBackIcon from '@mui/icons-material/DoorBack';
 import BroadcastOnPersonalIcon from '@mui/icons-material/BroadcastOnPersonal';
@@ -19,7 +19,7 @@ import axios from 'axios';
 import { ArrowLeft, ArrowRight, Check, Home, MapPin, Upload, Image, PenSquare, IndianRupee } from 'lucide-react';
 
 function CreateListing() {
-    const { backendUrl, userToken, navigate } = useContext(AppContext);
+    const { backendUrl, userToken, navigate, setListings, setUserData } = useContext(AppContext);
 
     const [currentState, setCurrentState] = useState(1);
     const [guestType, setGuestType] = useState(null);
@@ -102,7 +102,7 @@ function CreateListing() {
                 formData.append('location', location)
                 formData.append('guestType', guestType)
                 formData.append('category', category)
-                formData.append('address', address)
+                formData.append('address', JSON.stringify(address))
                 formData.append('price', price)
                 image.forEach((file) => {
                     formData.append("image", file);  // 'image' is the name in the backend (multer expects "image" as the field name)
@@ -118,12 +118,18 @@ function CreateListing() {
                     }
                 })
 
-                console.log("data after calling to create listing", data)
                 setIsLoading(false)
 
                 if (data.success) {
                     toast.success(data.message);
-
+                    setUserData((prev) => ({
+                        ...prev,
+                        totalPublicListings: [
+                            ...prev.totalPublicListings,
+                            String(data.newListing._id)
+                        ],
+                    }));
+                    setListings((pre) => [data.newListing, ...pre])
                     navigate(`/${data.newListing._id}`)
                 } else {
                     toast.error(data.message)

@@ -1,7 +1,7 @@
 
 
 import express from 'express';
-import { getUserData, userLogin, userRegister } from '../controller/user.controll.js';
+import { getUserData, saveOTP, userLogin, userRegister, verifyEmail } from '../controller/user.controll.js';
 import { protectListing } from '../middleware/protectListing.js';
 const Router = express.Router()
 
@@ -17,6 +17,9 @@ Router.route("/login")
 
 Router.route("/getData")
     .get(protectListing, getUserData)
+
+Router.post("/saveOTP", protectListing, saveOTP)
+Router.post("/verifyOtp", protectListing, verifyEmail)
 
 
 export default Router;

@@ -18,7 +18,6 @@ export const AppContextProvider = (props) => {
 
     const [menuBarShow, setMenuBarShow] = useState(false);
 
-    const [isLoading, setIsLoading] = useState(false);
 
     const [isHomePageLoading, setHomePageLoading] = useState(false);
 
@@ -33,13 +32,26 @@ export const AppContextProvider = (props) => {
     const [listing, setListing] = useState(null);
 
     const [editListing, setEditListing] = useState(null);
+    const [Onelisting, setOneListing] = useState(null);
+    const [currentImage, setCurrentImage] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    const [price, setPrice] = useState(0);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState("")
+    const [reviewSubLoading, setReviewSubLoading] = useState(false);
+
+    const [allReview, setAllReviews] = useState([])
+
 
     //fetching all listing 
     const allData = async () => {
         setHomePageLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/`)
-            //  console.log("all listing are", data)
+            console.log(data.Listings)
             setListings(data.Listings.reverse())
         } catch (err) {
             console.log(err)
@@ -93,6 +105,30 @@ export const AppContextProvider = (props) => {
 
     }
 
+    //getting the data of one listing 
+    const GetListingData = async (id) => {
+        setIsLoading(true);
+        try {
+            const { data } = await axios.get(`${backendUrl}/listing/${id}`)
+            // console.log("single listing data is ", data)
+            if (data.success) {
+                setOneListing(data.listing);
+                if (data.listing && data.listing.image && data.listing.image.length > 0) {
+                    setCurrentImage(data.listing.image[0].url);
+                }
+                setAllReviews(data.listing.reviews.reverse())
+                setPrice(data.listing.price)
+                setTotal(data.listing.price * 2);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (err) {
+            toast.error(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     useEffect(() => {
         if (userToken) {
             getUserdata()
@@ -116,10 +152,20 @@ export const AppContextProvider = (props) => {
         logoutFormShow, setLogoutFormShow,
         listing, setListing,
         editListing, setEditListing,
-        allData,filteredListings,
+        allData, filteredListings,
         listings, setListings,
         searchQuery, setSearchQuery,
-        activeCategory, setActiveCategory
+        activeCategory, setActiveCategory,
+        Onelisting, setOneListing,
+        currentImage, setCurrentImage,
+        currentImageIndex, setCurrentImageIndex,
+        isFavorite, setIsFavorite,
+        price, setPrice,
+        rating, setRating,
+        comment, setComment,
+        reviewSubLoading, setReviewSubLoading,
+        allReview, setAllReviews,
+        GetListingData
 
     }
 

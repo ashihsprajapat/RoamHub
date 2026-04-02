@@ -1,137 +1,179 @@
-
-
-
-import  { useContext, useEffect } from 'react'
-import AppContext from '../context/AppContext'
-import { toast } from 'react-toastify'
-import { useParams } from 'react-router-dom'
+import { useContext, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import AppContext from "../context/AppContext";
+import { toast } from "react-toastify";
 
 function EditListing() {
+    const { axios, backendUrl, userToken } = useContext(AppContext);
+    const { id } = useParams();
 
-    const { axios, backendUrl ,editListing,setEditListing} = useContext(AppContext)
-    const { id } = useParams()
+    // 🔥 Local state (DO NOT rely on context for refresh-safe data)
+    const [editListing, setEditListing] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    
+    const fetchListing = async () => {
+        console.log("in function ")
+        try {
+            setLoading(true);
+            console.log("call to axios")
+            const { data } = await axios.get(`${backendUrl}/listing/${id}`);
+            console.log("data of loading ",data)
+
+            if (data.success) {
+                setEditListing(data.listing);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (err) {
+            err.message
+            toast.error("Failed to load listing");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        getListingDetailas()
-    }, [])
+        console.log("fetching data ")
+        if (id) fetchListing();
+    }, [id]);
 
-    const getListingDetailas = async () => {
+    // ✅ Save updated listing
+    const SaveListingDetails = async () => {
         try {
-           // console.log("get all listing details triger")
+            const formData = new FormData();
 
-            const { data } = await axios.get(`${backendUrl}/listing/${id}`);
+            Object.entries(editListing).forEach(([key, value]) => {
+                if (value === undefined || value === null) return;
 
-           // console.log("Fetch listing detilas", data)
-           // console.log("api call")
+                if (typeof value === "object" && !(value instanceof File)) {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, value);
+                }
+            });
 
+            const { data } = await axios.post(
+                `${backendUrl}/listing/${id}/update-listing`,
+                formData,
+                {
+                    headers: {
+                        token: userToken,
+                    },
+                }
+            );
+
+            if (data.success) {
+                toast.success("Listing updated successfully");
+            } else {
+                toast.error(data.message);
+            }
         } catch (err) {
-            toast.error(err.message)
+            toast.error(err.message || "Update failed");
         }
+    };
+
+    // ✅ Loading state
+    if (loading || !editListing) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <p className="text-lg font-semibold">Loading listing...</p>
+            </div>
+        );
     }
 
-  //  console.log("Edit Listing is ", editListing)
-
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 space-y-6">
-                <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Edit Listing</h1>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+            <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8">
+                <h1 className="text-2xl font-bold text-center mb-6">Edit Listing</h1>
 
-                <form className="space-y-5">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Title</label>
-                        <input
-                            type="text"
-                            value={editListing.title || ''}
-                            onChange={(e) => setEditListing({ ...editListing, title: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            placeholder="Enter listing title"
-                        />
-                    </div>
+                <div className="space-y-4">
+                    <input
+                        type="text"
+                        value={editListing.title || ""}
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, title: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                        placeholder="Title"
+                    />
 
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                        <textarea
-                            value={editListing.description || ''}
-                            onChange={(e) => setEditListing({ ...editListing, description: e.target.value })}
-                            rows="4"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
-                            placeholder="Describe your listing"
-                        />
-                    </div>
+                    <textarea
+                        value={editListing.description || ""}
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, description: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                        rows="4"
+                        placeholder="Description"
+                    />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
-                            <input
-                                type="text"
-                                value={editListing.category || ''}
-                                onChange={(e) => setEditListing({ ...editListing, category: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                                placeholder="e.g. Apartment, Villa"
-                            />
-                        </div>
+                    <input
+                        type="text"
+                        value={editListing.category || ""}
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, category: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                        placeholder="Category"
+                    />
 
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Guest Type</label>
-                            <input
-                                type="text"
-                                value={editListing.guestType || ''}
-                                onChange={(e) => setEditListing({ ...editListing, guestType: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                                placeholder="e.g. Family, Solo"
-                            />
-                        </div>
-                    </div>
+                    <input
+                        type="text"
+                        value={editListing.guestType || ""}
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, guestType: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                        placeholder="Guest Type"
+                    />
 
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Location</label>
-                        <input
-                            type="text"
-                            value={editListing.location || ''}
-                            onChange={(e) => setEditListing({ ...editListing, location: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            placeholder="City, Country"
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        value={editListing.location || ""}
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, location: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                        placeholder="Location"
+                    />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Price per night ($)</label>
-                            <input
-                                type="number"
-                                value={editListing.price || ''}
-                                onChange={(e) => setEditListing({ ...editListing, price: Number(e.target.value) })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                                placeholder="0"
-                                min="0"
-                            />
-                        </div>
+                    <input
+                        type="number"
+                        value={editListing.price || ""}
+                        onChange={(e) =>
+                            setEditListing({
+                                ...editListing,
+                                price: Number(e.target.value),
+                            })
+                        }
+                        className="w-full border p-2 rounded"
+                        placeholder="Price"
+                    />
 
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Available Date</label>
-                            <input
-                                type="date"
-                                value={editListing.date ? new Date(editListing.date).toISOString().split('T')[0] : ''}
-                                onChange={(e) => setEditListing({ ...editListing, date: new Date(e.target.value) })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            />
-                        </div>
-                    </div>
+                    <input
+                        type="date"
+                        value={
+                            editListing.date
+                                ? new Date(editListing.date).toISOString().split("T")[0]
+                                : ""
+                        }
+                        onChange={(e) =>
+                            setEditListing({ ...editListing, date: e.target.value })
+                        }
+                        className="w-full border p-2 rounded"
+                    />
 
-                    <div className="pt-4">
-                        <button
-                            type="button"
-                            onClick={() => {/* handle save */}}
-                            className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                        >
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+                    <button
+                        onClick={SaveListingDetails}
+                        className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+                    >
+                        Save Changes
+                    </button>
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default EditListing
+export default EditListing;

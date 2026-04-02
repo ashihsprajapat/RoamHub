@@ -18,6 +18,7 @@ import AllListing from './pages/AllListing';
 import { useLocation } from 'react-router-dom'
 import Success from './components/Success';
 import Cancell from './components/Cancell';
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
 
@@ -36,6 +37,7 @@ function App() {
 
 
         <Route path="/" element={<Home />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth" element={<Authentication />} />
 
         <Route path="/success" element={<Success />} />

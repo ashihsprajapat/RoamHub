@@ -110,7 +110,7 @@ function HostPage() {
                             </svg>
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Host support</h3>
-                        <p className="text-gray-600">From 24/7 customer support to host communities, we're here to help.</p>
+                        <p className="text-gray-600">From 24/7 customer support to host communities, we&apos;re here to help.</p>
                     </div>
                 </div>
             </div>

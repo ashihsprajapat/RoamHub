@@ -4,6 +4,9 @@ const userSchema = new Schema({
     email: { type: String, required: true, },
     name: { type: String, required: true },
     password: { type: String, required: true },
+    verify:{type: Boolean, default : false},
+    otp:{type:String},
+    validTime:{type:Date},
     totalPublicListings:[ { type: Schema.Types.ObjectId, ref: 'Listing' }],
     totalBookings:[ { type: Schema.Types.ObjectId, ref: 'Booking' }],
 });

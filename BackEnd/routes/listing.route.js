@@ -10,11 +10,11 @@ import { protectListing } from '../middleware/protectListing.js';
 
 
 //get all listing
-Router.route("/")
+Router.route("/")  // caching
     .get(getAllListings);
 
 //update listing by id
-Router.route("/:id/update-listing")
+Router.route("/:id/update-listing")   // caching 
     .get(protectListing, getUpdateListingDetails)
     .post(protectListing, upload.single("image"), updateListing)
 
@@ -22,7 +22,7 @@ Router.route("/:id/update-listing")
 
 //delete listing
 Router.route("/:id/delete")
-    .delete(deleteListing)
+    .delete( protectListing,  deleteListing)
 
 
 //get a single listing
@@ -30,7 +30,7 @@ Router.route("/:id")
     .get(getListingById)
 
 //create Listing
-Router.route("/create")
+Router.route("/create") // caching
     .post(
         protectListing,
         upload.array("image",8),
@@ -41,7 +41,7 @@ Router.route("/create")
 //get all listing host by user
 Router.route("/profile/all-listing")
 .get(protectListing,
-    getAllListingHostByUser
+    getAllListingHostByUser   // caching 
 )
 
 

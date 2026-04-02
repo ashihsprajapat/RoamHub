@@ -35,21 +35,18 @@ export const getListingById = async (req, res) => {
 //update listing by id and new data
 export const updateListing = async (req, res) => {
     const { title, description, price, address, location, country } = req.body;
+    console.log(req.body)
 
-    const userId = req.user;
-
-
+    const user = req.user;
     const { id } = req.params;
-
-
-
     try {
         const listing = await Listing.findById(id);
-
-
-        // if (listing.onwer !== userId._id) {
-        //     return res.json({ success: false, message: "you are not onwer of this listing" })
-        // }
+        if(!listing)
+            return res.json({success:false, message:"Listing is not found "})
+        console.log(listing)
+         if (!userId._id.requals(String(listing.onwer))) {
+             return res.json({ success: false, message: "you are not onwer of this listing" })
+         }
 
         const imageFile = req.file;
         if (!imageFile) {
@@ -69,12 +66,14 @@ export const updateListing = async (req, res) => {
             url: imageUpload.secure_url,
         })
 
-        await Listing.findByIdAndUpdate(id, {
+        const updateListingn= await Listing.findByIdAndUpdate(id, {
             title, description, price, location, country, image,
             onwer: userId._id, address
         })
 
-        res.json({ success: true, message: "listing update successfull" })
+        console.log(updateListingn)
+
+        res.json({ success: true,updateListingn, message: "listing update successfull" })
 
     } catch (err) {
         res.json({ success: false, message: err.message })
@@ -101,13 +100,26 @@ export const getUpdateListingDetails = async (req, res) => {
 
 //delete listing 
 export const deleteListing = async (req, res) => {
+    let user= req.user
+    
     const { id } = req.params;
     try {
 
-        const listing = await Listing.findByIdAndDelete(id);
-        if (!listing) {
+        const listing = await Listing.findById( id);
+        
+         if (!listing) {
             return res.json({ success: false, message: "listing not exist " })
         }
+
+        if(!listing.onwer.equals(user._id)){
+            return res.json({success:false,  message:"Your are not owner of this listing "})
+        }
+
+        const deleteListing  = await Listing.findByIdAndDelete(id);
+       user.totalPublicListings= user.totalPublicListings.filter((id)=> !id.equals(listing._id))
+        await user.save();
+         
+
         res.json({ success: true, message: "listing is deleted" })
     } catch (err) {
         res.json({ success: false, message: err.message })
@@ -117,8 +129,9 @@ export const deleteListing = async (req, res) => {
 
 //create listing
 export const createListing = async (req, res) => {
-    const { title, description, price, address, location, country, guestType, category } = req.body;
+    let  { title, description, price, address, location, country, guestType, category } = req.body;
     const userId = req.user;
+    address= JSON.parse(address);
 
     try {
         //  console.log(req.files)
@@ -145,10 +158,8 @@ export const createListing = async (req, res) => {
         userId.totalPublicListings?.push(newListing._id);
         await userId.save();
 
-        console.log("listing is created from here")
         return res.json({ success: true, newListing })
     } catch (err) {
-        console.log(err)
         res.json({ success: false, message: err.message })
     }
 
