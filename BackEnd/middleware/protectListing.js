@@ -3,11 +3,13 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import User from '../User/userModel.js';
 dotenv.config();
+import client from './../config/Redis.js';
 
 export const protectListing = async (req, res, next) => {
-
     
     const token = req.headers.token;
+    const isPeresen= await client.SISMEMBER('Token:user', token)
+    console.log("token checking in database")
     
     
     if (!token) {
@@ -15,7 +17,7 @@ export const protectListing = async (req, res, next) => {
     }
     try {
         const decode = jwt.verify(token, process.env.JwT_SECRET)
-       
+        
 
         req.user = await User.findById(decode.id).select('-password')
        

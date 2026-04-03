@@ -51,8 +51,8 @@ export const AppContextProvider = (props) => {
         setHomePageLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/`)
-            console.log(data.Listings)
-            setListings(data.Listings.reverse())
+            console.log( "All Data in context api ",data)
+            setListings(data.reverse())
         } catch (err) {
             console.log(err)
         } finally {
@@ -110,7 +110,6 @@ export const AppContextProvider = (props) => {
         setIsLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/${id}`)
-            // console.log("single listing data is ", data)
             if (data.success) {
                 setOneListing(data.listing);
                 if (data.listing && data.listing.image && data.listing.image.length > 0) {
@@ -121,7 +120,7 @@ export const AppContextProvider = (props) => {
                 setTotal(data.listing.price * 2);
             } else {
                 toast.error(data.message);
-            }
+            }   
         } catch (err) {
             toast.error(err.message);
         } finally {
