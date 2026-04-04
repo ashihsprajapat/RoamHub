@@ -45,7 +45,6 @@ export const AppContextProvider = (props) => {
 
     const [allReview, setAllReviews] = useState([])
 
-
     //fetching all listing 
     const allData = async () => {
         setHomePageLoading(true);
@@ -76,10 +75,11 @@ export const AppContextProvider = (props) => {
     const [state, setState] = useState('Login');
 
     useEffect(() => {
-
+        if(userData)
+            return 
         const getToken = localStorage.getItem('air_bnb_token')
 
-        if (getToken) {
+        if ( !userData &&  getToken) {
             setUserToken(getToken);
         }
 
@@ -89,6 +89,8 @@ export const AppContextProvider = (props) => {
     const getUserdata = async () => {
 
         try {
+            if(userData || !userToken)
+                return 
 
             const { data } = await axios.get(`${backendUrl}/auth/getData`, { headers: { token: userToken } })
 
@@ -111,6 +113,7 @@ export const AppContextProvider = (props) => {
         try {
             const { data } = await axios.get(`${backendUrl}/listing/${id}`)
             if (data.success) {
+                console.log(data.listing)
                 setOneListing(data.listing);
                 if (data.listing && data.listing.image && data.listing.image.length > 0) {
                     setCurrentImage(data.listing.image[0].url);
@@ -127,6 +130,7 @@ export const AppContextProvider = (props) => {
             setIsLoading(false);
         }
     }
+    console.log("listing in context api for home page ", listing)
 
     useEffect(() => {
         if (userToken) {
