@@ -91,7 +91,7 @@ function Home() {
                 </div>
             </div>
 
-            {!isHomePageLoading ?
+            {isHomePageLoading ?
                 <HomePageSkeleton />
                 :
 
