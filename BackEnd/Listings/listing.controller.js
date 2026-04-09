@@ -14,7 +14,6 @@ export const getAllListings = async (req, res) => {
         if(listingInRedis.length >1){
             const data= listingInRedis.map((listing)=> JSON.parse(listing))
             
-            console.log("return from redis")
             return  res.json(  { success:true,  Listings : data})
         }
         const Listings = await Listing.find({}).populate('_id').select('-password')
