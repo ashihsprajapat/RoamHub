@@ -54,5 +54,5 @@ const listingSchema = new Schema({
         default: Date.now
     },
 
-})
+}, {timestamps : true})
 export default listingSchema;

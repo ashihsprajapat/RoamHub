@@ -6,25 +6,20 @@ import User from '../User/userModel.js';
 //get all listings
 export const getAllListings = async (req, res) => {
     try {
-      // await client.expire("Listing",1)
-      //return res.json({message:"Something went wrong", success:false})
-       // const allList= await Listing.find({})
-       // console.log(allList.length)
+    
         let listingInRedis= await client.lRange("Listing",0, -1)
         if(listingInRedis.length >1){
+            console.log("return from redis ")
             const data= listingInRedis.map((listing)=> JSON.parse(listing))
-            
             return  res.json(  { success:true,  Listings : data})
         }
         const Listings = await Listing.find({}).populate('_id').select('-password')
         
-
-        res.json({ success: true, Listings, tip:"Data"  });
         for(let l  of  Listings){
             await  client.lPush('Listing', JSON.stringify( l));
         }
-        await client.expire("Lisiting", 3600 );
-
+        await client.expire('Listing', 3600 );
+        res.json({ success: true, Listings, tip:"Data"  });
 
     } catch (err) {
         console.log(err.message)
@@ -209,8 +204,6 @@ export const getAllListingHostByUser = async (req, res) => {
         
         const user = req.user;
         const _id = user._id;
-       // await client.expire(`userListing:${_id}`,1)
-       // return res.json({success:false, message:"Something went wrong"})
         const listing= await client.lRange(`userListing:${_id}`, 0 , -1);
         
         if(listing.length   > 1){
@@ -218,13 +211,12 @@ export const getAllListingHostByUser = async (req, res) => {
             return res.json({ success:true, Listings})
         }
         const Listings = await Listing.find({ onwer: _id });
-        res.json({ success: true, Listings });
         for(let l of Listings){
             
         await client.lPush(`userListing:${_id}`, JSON.stringify(l));
         }
         await client.expire(`userListing:${_id}`, 300)
-
+        res.json({ success: true, Listings });
         
     } catch (err) {
         console.log(err)
