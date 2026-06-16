@@ -142,25 +142,23 @@ function SingleListing() {
     //maintain when from and to change then calculate totalPrice and nights also
     useEffect(() => {
 
-        // Convert dates to milliseconds
         const fromDate = new Date(from).getTime();
         const toDate = new Date(to).getTime();
 
         // Calculate difference in days including both from and to dates
         const diffTime = toDate - fromDate;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         setNight(diffDays);
 
-        // Calculate total price
         setTotal(diffDays * price)
 
 
     }, [from, to])
 
 
-
+//pay_T1MfMK2yIv0crL
     const initPay = async (order) => {
-        //console.log("calling to verify function1")
+        
         const options = {
             key: import.meta.env.VITE_ROZORPAY_ID,
             amount: order.amount,
@@ -169,10 +167,21 @@ function SingleListing() {
             description: "Credits paymnets",
             order_id: order.id,
             receipt: order.receipt,
+            from, to,
+            totalAmount: total,
+            pernightCharge: Onelisting.price,
+            TotalNights: night,
             handler: async (response) => {
                 try {
-                    const { data } = await axios.post(`${backendUrl}/transaction/verify`, response, { headers: { token: userToken } })
-
+                    const verifyData = {
+                        ...response,
+                        from, to,
+                        totalAmount : total,
+                        TotalNights: night,
+                        pernightCharge : Onelisting.price
+                    }
+                    const { data } = await axios.post(`${backendUrl}/transaction/verify`, verifyData, { headers: { authorization: `Bearer ${userToken}` } })
+                    console.log("data getting from verify Paymnet", data)
                     if (data.success) {
                         toast.success(data.message)
                         Navigate(`/profile/${userData._id}/all-booking`)
@@ -189,28 +198,19 @@ function SingleListing() {
 
     const paymentRazorpay = async () => {
         try {
-            const bookingData = {
-                guests: guestCount,
-                totalAmount: total,
-                nights: night,
-                bookingDuration: {
-                    from,
-                    to
-                },
-                pricePerNight: Onelisting.price
-            }
-            const { data } = await axios.post(`${backendUrl}/transaction/payment/${id}`, bookingData, { headers: { token: userToken } })
+
+            let paymentType = "online";
+            const { data } = await axios.post(`${backendUrl}/transaction/payment/${id}`, { totalAmount: total, paymentType }, { headers: { authorization: `Bearer ${userToken}` } })
+            console.log("data for transaction payment response", data)
             if (data.success) {
                 initPay(data.order);
-            } else {
-                console.log(data.message)
             }
         } catch (error) {
-            console.log(error)
             toast.error(error.message)
         }
     }
 
+    console.log("totalAmount", total)
 
     if (isLoading) {
         return (
@@ -679,6 +679,18 @@ function SingleListing() {
                         <p className="text-gray-600">Be the first one to review this place!</p>
                     </div>
                 )}
+            </div>
+
+            {/* load more revies */}
+            <div>
+                {
+                    allReview.length <= Onelisting.reviewsCount ?
+                        <button
+                            className='border-2 border-red-400 p-2 rounded-lg text-white bg-red-300 cursor-pointer '>
+                            Load More Reviews
+                        </button>
+                        : <></>
+                }
             </div>
         </div>
 

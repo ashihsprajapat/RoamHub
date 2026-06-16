@@ -58,7 +58,6 @@ function Authentication() {
                 const { data } = await axios.post(`${backendUrl}/auth/register`, {
                     name, email, password
                 })
-
                 if (data.success) {
                     setName("");
                     setEmail('');
@@ -71,7 +70,6 @@ function Authentication() {
                     toast.error(data.message)
                     setPassword("");
                     setEmail('');
-
                 }
             } catch (err) {
                 toast.error(err.message)
@@ -80,8 +78,6 @@ function Authentication() {
                 setIsLoading(false)
             }
         }
-
-
     }
 
 
@@ -95,7 +91,6 @@ function Authentication() {
                         {state === 'Login' ? 'Sign in to your account' : 'Create your account'}
                     </p>
                 </div>
-                
                 <form className="mt-8 space-y-6" onSubmit={onSubmithandler}>
                     <div className="space-y-4 rounded-md">
                         {state === 'SignUp' && (

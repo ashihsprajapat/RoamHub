@@ -30,6 +30,8 @@ export const AppContextProvider = (props) => {
     const [logoutFormShow, setLogoutFormShow] = useState(false)
 
     const [listing, setListing] = useState(null);
+    
+    console.log("listing in appcontext", listing)
 
     const [editListing, setEditListing] = useState(null);
     const [Onelisting, setOneListing] = useState(null);
@@ -50,9 +52,6 @@ export const AppContextProvider = (props) => {
         setHomePageLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/`)
-            if(data?.tip){
-                setListings(data.Listings.reverse())
-            }else
                 setListings(data.Listings)
         } catch (err) {
             console.log(err)
@@ -84,33 +83,26 @@ export const AppContextProvider = (props) => {
             return
         }
         const getToken = localStorage.getItem('air_bnb_token')
-
         if (!userData && getToken) {
             setUserToken(getToken);
         }
-
     }, [])
 
     // get user data 
     const getUserdata = async () => {
-
         try {
             if (userData)
                 return
-
-            const { data } = await axios.get(`${backendUrl}/auth/getData`, { headers: { token: userToken } })
-
-
+            const { data } = await axios.get(`${backendUrl}/auth/getData`, { headers: { authorization: `bearer ${userToken}` } })
+            console.log("user Data is ", data )
             if (data.success) {
                 setUserData(data.user);
             } else {
                 toast.error(data.message);
             }
-
         } catch (err) {
             toast.error(err.message);
         }
-
     }
 
     //getting the data of one listing 
@@ -118,22 +110,29 @@ export const AppContextProvider = (props) => {
         setIsLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/${id}`)
+
             if (data.success) {
-                setOneListing(data.listing);
-                if (data.listing && data.listing.image && data.listing.image.length > 0) {
-                    setCurrentImage(data.listing.image[0].url);
+                let getlisting = data.listing.listing
+                let Lreviews = data.listing.reviews
+                console.log("listing getting",getlisting)
+                console.log( "reviews getting ",Lreviews )
+                setOneListing(getlisting);
+                if (getlisting && getlisting.image && getlisting.image.length > 0) {
+                    setCurrentImage(getlisting.image[0].url);
                 }
-                setAllReviews(data.listing.reviews.reverse())
-                setPrice(data.listing.price)
+                setAllReviews(Lreviews.reverse())
+                setPrice(getlisting.price)
             } else {
                 toast.error(data.message);
             }
+
         } catch (err) {
             toast.error(err.message);
         } finally {
             setIsLoading(false);
         }
     }
+
 
     useEffect(() => {
         if (userToken) {
@@ -148,7 +147,6 @@ export const AppContextProvider = (props) => {
         setMenuBarShow(false)
     }, [setState, navigate, setUserToken, setUserData, userToken])
 
-    console.log("user Data ", userData)
     const value = {
         navigate, backendUrl, userData, setUserData,
         menuBarShow, setMenuBarShow,
@@ -174,7 +172,6 @@ export const AppContextProvider = (props) => {
         reviewSubLoading, setReviewSubLoading,
         allReview, setAllReviews,
         GetListingData
-
     }
 
     return (

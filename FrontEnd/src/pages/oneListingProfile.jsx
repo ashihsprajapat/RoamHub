@@ -8,35 +8,34 @@ import { MapPin, IndianRupee, Calendar, User, Home, Star, Edit, Trash2, Clock, }
 import toast from 'react-hot-toast';
 
 function OneListingProfile() {
-    const { userData, backendUrl, userToken, navigate, setEditListing } = useContext(AppContext);
+    const { userData, backendUrl, userToken, navigate, setEditListing , listing, setListing} = useContext(AppContext);
     const { list_id } = useParams();
+    console.log("listing from context",listing)
 
-
-    const { listing, setListing } = useContext(AppContext)
     const [bookings, setBookings] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('details'); // 'details' or 'bookings'
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('details');
 
-    useEffect(() => {
+    useEffect(()=> {
         if (list_id && userToken) {
             fetchListingDetails();
+            fetchListingBookings()
         }
     }, [list_id, userToken]);
+    
+    console.log("all booking", bookings)
 
     const fetchListingDetails = async () => {
         try {
             setIsLoading(true);
             const { data } = await axios.get(`${backendUrl}/listing/${list_id}`, {
-                headers: { token: userToken }
+                headers: { authorization: `Bearer ${userToken}` }
             });
 
-           console.log("Fetch listing detilas from redis", data)
-
+            console.log("listing data is ", data )
             if (data.success) {
-                setListing(data.listing);
+                setListing(data.listing.listing);
                 setBookings(data.listing.currentBooking)
-            } else {
-                toast.error(data.message || 'Failed to fetch listing details');
             }
         } catch (err) {
             console.error(err);
@@ -44,39 +43,35 @@ function OneListingProfile() {
         } finally {
             setIsLoading(false);
         }
-    };
+    };  
 
     const fetchListingBookings = async () => {
         try {
-            // This is a placeholder API call - update with your actual endpoint
-            const { data } = await axios.get(`${backendUrl}/booking/listing/${list_id}`, {
-                headers: { token: userToken }
+            const { data } = await axios.get(`${backendUrl}/booking/${list_id}`, {
+                headers: { authorization: `Bearer ${userToken}` }
             });
+
+            console.log("all Booking are", data )
 
             if (data.success) {
                 setBookings(data.bookings || []);
-            } else {
-                toast.error(data.message || 'Failed to fetch booking details');
-            }
+            } 
         } catch (err) {
             console.error(err);
             toast.error('Error fetching booking details');
         }
     };
 
+    console.log("all bookings", bookings)
+
     const handleDeleteListing = async () => {
         if (!window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
             console.log("")
         }
-
         try {
-            // This is a placeholder API call - update with your actual endpoint
             const { data } = await axios.delete(`${backendUrl}/listing/${list_id}/delete`, {
                 headers: { token: userToken }
             });
-
-          //  console.log("Delete listing data is ", data)
-
             if (data.success) {
                 toast.success('Listing deleted successfully');
                 navigate('/profile/' + userData._id + '/all-listings');
@@ -89,7 +84,6 @@ function OneListingProfile() {
         }
     };
 
-    //console.log("listing data is", listing)
 
 
     const handleEditListing = () => {
@@ -100,7 +94,6 @@ function OneListingProfile() {
     if (isLoading) {
         return (
             <div className="w-full">
-              
                 <div className="animate-pulse">
                     <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
                     <div className="h-64 bg-gray-200 rounded-lg mb-6"></div>
@@ -196,7 +189,7 @@ function OneListingProfile() {
                         onClick={() => setActiveTab('bookings')}
                         className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'bookings' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                     >
-                        Bookings ({bookings.length})
+                        Bookings ({bookings?.length})
                     </button>
                 </div>
             </div>
@@ -220,8 +213,8 @@ function OneListingProfile() {
                                     <div className="flex items-center gap-2">
                                         <Home className="w-5 h-5 text-gray-500" />
                                         <div>
-                                            <p className="text-sm text-gray-500">Property Type</p>
-                                            <p className="font-medium text-gray-700">{listing.propertyType || 'Not specified'}</p>
+                                            <p className="text-sm text-gray-500">Property Category</p>
+                                            <p className="font-medium text-gray-700">{listing.category || 'Not specified'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -232,10 +225,10 @@ function OneListingProfile() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Star className="w-5 h-5 text-gray-500" />
+                                        <Star className="w-5 text-yellow-500  h-5 " />
                                         <div>
                                             <p className="text-sm text-gray-500">reviews</p>
-                                            <p className="font-medium text-gray-700">{listing.reviews?.length  || 'No reviews yet'}</p>
+                                            <p className="font-medium text-gray-700">{listing.reviewsCount  ||  0 }  reviews yet</p>
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +281,7 @@ function OneListingProfile() {
                                     <span className="text-gray-700">Availability</span>
                                 </div>
                                 <p className="text-gray-600 text-sm">
-                                    {listing.availability ? 'Available for booking' : 'Currently unavailable'}
+                                    {!listing.isBook ? 'Available for booking' : 'Currently unavailable'}
                                 </p>
                             </div>
 
@@ -297,7 +290,7 @@ function OneListingProfile() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Total Bookings</p>
-                                        <p className="text-lg font-semibold text-gray-800">{bookings.length || 0}</p>
+                                        <p className="text-lg font-semibold text-gray-800">{listing.currentBooking.length || 0}</p>
                                     </div>
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Views</p>
@@ -322,7 +315,7 @@ function OneListingProfile() {
                     <div className="p-6">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Booking History</h2>
 
-                        {bookings && bookings.length > 0 ? (
+                        {listing.currentBooking.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">

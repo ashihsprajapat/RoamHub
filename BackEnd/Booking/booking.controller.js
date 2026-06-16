@@ -2,66 +2,14 @@
 
 import { Booking } from "./bookingModel.js";
 import Listing from "../Listings/listingModel.js";
-import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_KEY);
+import { prisma } from "../lib/prisma.js";
+
 
 export const createBooking = async (req, res) => {
     try {
-        const bookingData = req.bookingData;
-        const user = req.user;
-        const listingId = req.bookingData?.listingId.toString();
-
-
-        const listing = await Listing.findById(listingId);
-        if (!listing) {
-            return res.status(404).json({
-                success: false,
-                message: "Listing not found"
-            });
-        }
-
-
-        if (listing.isBooked) {
-            return res.status(400).json({
-                success: false,
-                message: "This listing is already booked"
-            });
-        }
-
-
-        // Create new booking
-        const newBooking = new Booking({
-            guest: user._id,
-            ownerName: user.name,
-            totalPrice: bookingData.totalAmount,
-            paymentStatus: bookingData.payment === true ? 'confirmed' : 'cancelled',
-            listing: listing._id,
-            transaction: bookingData._id,
-            bookingDuration: {
-                from: bookingData.bookingDuration.from,
-                to: bookingData.bookingDuration.to,
-                guestCount: bookingData.guests
-            }
-        });
-
-        await newBooking.save();
-
-        // Update listing status
-        listing.isBook = user._id;
-        listing.currentBooking.push( newBooking._id);
-        await listing.save();
-        // adding into user totalBookings array
-        user.totalBookings.push(newBooking._id);
-        await user.save();
-
-        return res.status(200).json({
-            success: true,
-            booking: newBooking,
-            message: "Booking conformed"
-        });
+       
 
     } catch (err) {
-        console.error("Booking creation error:", err);
         return res.status(500).json({
             success: false,
             message: "Error creating booking",
@@ -69,6 +17,8 @@ export const createBooking = async (req, res) => {
         });
     }
 }
+
+
 
 export const cancelBooking = async (req, res) => {
     try {
@@ -120,4 +70,20 @@ export const getAllBookingByUser= async(req, res)=>{
         console.log(error.message)
         res.json({success:false, message:error.message})
     }
+}
+
+export const getAllBookingsOfListing= async(req, res )=>{
+    console.log("req is comming for booking")
+    const listingId = req.params.id;
+    try {
+        const bookings=  await prisma.booking.findMany({
+            where : {
+                listingId
+            }
+        })
+        console.log("All Booking of this listing ",bookings)
+        res.status(200).json({bookings})
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({message:error.message})  }
 }

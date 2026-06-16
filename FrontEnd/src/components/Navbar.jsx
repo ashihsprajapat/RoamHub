@@ -11,13 +11,13 @@ function Navbar() {
         useContext(AppContext);
 
     return (
-        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative">
+        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-2 border-b border-gray-300 bg-white relative">
 
             {/* Logo */}
             <NavLink to="/">
                 <img
-                    className="w-20 sm:w-24 md:w-28 lg:w-32 cursor-pointer"
-                    src={assets.logo_2}
+                    className=" w-32 h-24  border-red-400  cursor-pointer"
+                    src={assets.RantoraLogo}
                     alt="logo"
                     onClick={() => navigate('/')}
                 />
@@ -49,7 +49,7 @@ function Navbar() {
                     <div
                         onClick={() => {
                             setMenuBarShow(true);
-                            navigate(`/profile/${userData._id}/all-listings`);
+                            navigate(`/profile/${userData.id}/all-listings`);
                         }}
                         className="bg-blue-700 px-3 py-1.5 rounded-full text-white font-semibold cursor-pointer hover:bg-blue-600"
                     >
@@ -103,7 +103,7 @@ function Navbar() {
                         className="bg-blue-700 px-3 py-1.5 rounded-full text-white font-semibold cursor-pointer hover:bg-blue-600 w-fit"
                         onClick={() => {
                             setMenuBarShow(true);
-                            navigate(`/profile/${userData._id}/all-listings`);
+                            navigate(`/profile/${userData.id}/all-listings`);
                             setOpen(false);
                         }}
                     >

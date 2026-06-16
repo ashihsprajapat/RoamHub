@@ -1,5 +1,5 @@
 
-import { useContext, useEffect } from "react";
+import { useContext,  } from "react";
 import AppContext from "../context/AppContext";
 import LisitngCard from "../components/LisitngCard";
 import HomePageSkeleton from './../components/skeletons/HomePageSkeleton';
@@ -34,8 +34,6 @@ function Home() {
     ];
 
 
-
-   
 
     return (
         <div className="min-h-screen bg-gray-50">

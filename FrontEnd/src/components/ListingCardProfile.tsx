@@ -33,7 +33,7 @@ export interface Listing {
 }
 
 export interface User {
-    _id: string;
+    id: string;
     email: string;
     name: string;
     totalPublicListings: string[];
@@ -54,7 +54,7 @@ function ListingCardProfile({ userData, listing } : ListingCardProfileProps) {
 
 
     const handleViewListing = () => {
-        navigate(`/profile/${userData._id}/${listing._id}`);
+        navigate(`/profile/${userData.id}/${listing._id}`);
     };
 
     const handleEditListing = (e: React.MouseEvent<HTMLElement>) => {
@@ -64,7 +64,7 @@ function ListingCardProfile({ userData, listing } : ListingCardProfileProps) {
 
     const handleViewPublic = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
-        window.open(`/${listing._id}`, '_blank');
+        navigate(`/${listing._id}`, );
     };
 
     return (
@@ -109,9 +109,11 @@ function ListingCardProfile({ userData, listing } : ListingCardProfileProps) {
                     </p>
 
                     <div className='mt-auto flex flex-wrap gap-3 text-sm'>
-                        <div className='flex items-center gap-1 text-gray-500'>
+                    
+                        <div className={` ${listing.isBook ? " text-red-500 ":"" } flex items-center gap-1 text-gray-500'`}>
                             <Calendar className='w-4 h-4' />
-                            <span>{listing.isBook ? 'Available' : 'Unavailable'}</span>
+                            <span
+                            >{!listing.isBook ? 'Available' : 'Unavailable'}</span>
                         </div>
 
                         <div className='flex items-center gap-1 text-gray-500'>

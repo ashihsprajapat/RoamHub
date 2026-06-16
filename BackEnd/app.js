@@ -1,8 +1,7 @@
 
 import dotenv from "dotenv"
-//if (process.env.NODE_ENV != "production") {
 dotenv.config();
-//}
+
 
 
 
@@ -60,7 +59,9 @@ app.get("/", (req, res) => { res.send( "Api is working fine" ) })
 
 import  client from './config/Redis.js'
 import {transport} from './config/NodeMailer.js'
-
+import { prisma } from "./lib/prisma.js";
+import { protectListing, verifyEmail } from "./middleware/protectListing.js";
+import LoadRoute from "./Reviews/LoadReviewsRoute.js";
 
   await transport.verify()
   .then(()=> console.log("Verify nodemail tranpost"))
@@ -74,15 +75,15 @@ await connectToCloudinary();
 app.use("/listing", ListingRoute);
 
 //router for revie
-app.use("/revies", revieRoute)
+app.use("/reviews",  protectListing, verifyEmail,  revieRoute)
 
 
 //route for user login and register
 app.use("/auth", userRoute)
 
+app.use("/loadReviews", LoadRoute )
 
+app.use("/booking",  protectListing, verifyEmail,  bookingRout)
 
-app.use("/booking", bookingRout)
-
-app.use("/transaction", transactionRoute)
+app.use("/transaction", protectListing, verifyEmail,   transactionRoute)
 

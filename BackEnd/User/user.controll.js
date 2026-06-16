@@ -1,12 +1,13 @@
 
 import bcrypt from 'bcrypt'
 
-import User from './userModel.js';
+
 import { generateToekn } from './../utils/tokenGenret.js';
 
 import { optGernate } from './../utils/optGererate.js';
 import { transport , templetOTPMail } from '../config/NodeMailer.js';
 import client from '../config/Redis.js';
+import { prisma } from '../lib/prisma.js';
 
 
 //user register
@@ -17,24 +18,30 @@ export const userRegister = async (req, res) => {
     if (!name || !email || !password )
         return res.json({ success: false, message: "missing details" })
     try {
-        const user = await User.findOne({ email })
+    
+        const user = await prisma.user.findUnique({
+            where:{ email}
+        })
         if (user)
-            return res.json({ success: false, message: "email is already exist" })
+            return res.status(400).json({ success: false, message: "email is already exist" })
         const hashpassword = await bcrypt.hash(password, 10);
 
-        const newUser = new User({
-            name, email, password: hashpassword, lastLogin: Date.now()
+        const newUser = await prisma.user.create ({
+            data:{
+                name,
+                email,
+                password: hashpassword
+            }
+            
         })
 
-        await newUser.save();
         
-        res.json({ success: true, message: "user register successfull", token: generateToekn(newUser._id) })
+        res.status(201).json({ success: true, message: "user register successfull", token: generateToekn(newUser.id) })
 
     } catch (err) {
-        res.json({ success: false, message: err.message })
+        console.log(err.message)
+        res.status(500).json({ success: false, message: err.message })
     }
-
-
 
 }
 
@@ -44,26 +51,27 @@ export const userLogin = async (req, res) => {
 
     const { email, password } = req.body;
     if (!email || !password)
-        return res.json({ success: false, message: "missing details" })
+        return res.status(404).json({ success: false, message: "missing details" })
 
 
     try {
-        const user = await User.findOne({ email })
+        const user = await prisma.user.findUnique({where:{email}})
         if (!user)
-            return res.json({ success: false, message: "email not exist" })
+            return res.status(400).json({ success: false, message: "email not exist" })
+      
 
         const match = await bcrypt.compare(password, user.password);
         if (!match)
             return res.json({ success: false, message: "wrong password" })
-        user.lastLogin= Date.now()
-        await user.save();
-        res.json({
+        
+        
+        res.status(200).json({
             success: true,
             message: "Login success full",
-            token: generateToekn(user._id),
+            token: generateToekn(user.id),
         })
     } catch (err) {
-        res.json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 
 }
@@ -72,9 +80,7 @@ export const userLogin = async (req, res) => {
 //get user data
 
 export const getUserData= async(req,res, next)=>{
-    const user= req.user;
-
-    res.json({success:true, user});
+    res.status(200).json({success:true, user : req.user});
 }
 
 //sending email 
@@ -91,7 +97,7 @@ export const otpsend= async(req, res)=>{
         
         res.json({success:true, message:"opt save Success full "})
         
-        let val= await  client.set(`otp:${user._id}`, otp, {EX : 1*60} )
+        let val= await  client.set(`otp:${user.id}`, otp, {EX : 1*60} )
         
     } catch (error) {
         res.json({message:error.message, success:false})
@@ -102,21 +108,35 @@ export const otpsend= async(req, res)=>{
 export const verifyEmail= async(req,res)=>{
     try{
         const {otp}= req.body;
-        const user =await User.findById(req.user)
-        if(!otp  )
+         if(!otp  )
             return res.json({success:false, message:"Please give me otp"})
-        let val= await client.get(`otp:${user._id}`)
-        if(!val)
-            return res.json({message:"Otp is expire", success: false})
+
+       
+        let user = req.user;
+
         
-        if(JSON.parse(val) != otp)
+        let val= await client.get(`otp:${user.id}`)
+        if(!val)
+            return res.status(200).json({message:"Otp is expire", success: false})
+        
+        if(JSON.parse(val) !== otp)
             return res.json({message:"Wrong Otp", success:false})
         
-        user.verify = true;
+        
+        await prisma.user.update({
+            where:{email:user.email} ,
+            data:{
+                verify : true
+            }
+        });
+        
+        
+        user.verify=true;
+
+        await client.set(`token:${user.id}`, JSON.stringify(user),{EX:20*60}) // 20 minit
+
         res.json({success:true, message:"Email verify success", user})
-        await user.save();
-        const token = req.headers.token;
-        await client.set(token, JSON.stringify(user),{EX:20*60}) // 20 minit
+        
     }catch(err){
         console.log(err)
         res.json({message:err.message, success:false})

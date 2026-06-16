@@ -5,6 +5,7 @@ import upload from './upload_area.svg'
 import logo from './ABNB-4aaade0f.png'
 import imageUpload from './profile_upload_icon.svg'
 import logo_2 from "./logo_2.png"
+import RantoraLogo  from './RantoraLogo.png'
 
 export const assets={
     lockicon,
@@ -12,7 +13,8 @@ export const assets={
     email_icon,
     logo,
     imageUpload,
-    logo_2
+    logo_2,
+    RantoraLogo
 }
 
 export const categrou=[

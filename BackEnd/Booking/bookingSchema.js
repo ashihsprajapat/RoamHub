@@ -9,7 +9,7 @@ const bookingSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
+    }, 
     onwer: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -20,11 +20,10 @@ const bookingSchema = new Schema({
         required: true
     },
 
-    bookingDuration: {
         from: { type: Date, required: true },
         to: { type: Date, required: true },
         guestCount: { type: Number, required: true },
-    },
+        
     totalPrice: {
         type: Number,
         required:true

@@ -3,23 +3,16 @@ import Listing from './listingModel.js';
 import client from '../config/Redis.js';
 import {templetListingCreate, transport} from '../config/NodeMailer.js'
 import User from '../User/userModel.js';
+import { prisma } from '../lib/prisma.js';
 //get all listings
 export const getAllListings = async (req, res) => {
     try {
     
-        let listingInRedis= await client.lRange("Listing",0, -1)
-        if(listingInRedis.length >1){
-            console.log("return from redis ")
-            const data= listingInRedis.map((listing)=> JSON.parse(listing))
-            return  res.json(  { success:true,  Listings : data})
-        }
-        const Listings = await Listing.find({}).populate('_id').select('-password')
+        //let listingInRedis= await client.lRange("Listing",0, -1)
         
-        for(let l  of  Listings){
-            await  client.lPush('Listing', JSON.stringify( l));
-        }
-        await client.expire('Listing', 3600 );
-        res.json({ success: true, Listings, tip:"Data"  });
+        const Listings = await Listing.find({isBook: false});
+        //console.log("get all Listing ", Listings)
+        res.json({ success: true, Listings });
 
     } catch (err) {
         console.log(err.message)
@@ -38,17 +31,25 @@ export const getListingById = async (req, res) => {
             return res.json({success:true,  listing})
         }
 
-        const listing = await Listing.findById(id).populate([{
-            path: "reviews",
-            select: "ownerName comment rating createdAt onwer"
-        }, { path: "currentBooking", populate: { path: "guest", select: "-password" } }])
+        const listing = await Listing.findById(id)
         if (!listing) {
-            return res.json({ success: false, message: "Invalid " })
+            return res.status(404).json({ success: false, message: "Listing not found " })
         }
-        res.json({ success: true, listing })
-        await client.set(`Listing:${id}`, JSON.stringify(listing), {EX:300})
-       // await client.expire(`Listing:${id}`, );
-       
+        const reviews = await prisma.review.findMany({
+            where:{
+                listingId : id
+            },
+            orderBy :{
+                rating:'desc'
+            },
+            take : Math.min(5, listing.reviewsCount)
+        })
+        const response = {
+            listing,
+            reviews
+        }
+        res.json({ success: true, response })
+        await client.set(`Listing:${id}`, JSON.stringify(response), {EX: 60 * 5})
     } catch (err) {
         console.log(err)
         res.json({ success: false, message: err.message })
@@ -66,60 +67,56 @@ export const updateListing = async (req, res) => {
     try {
         const listing = await Listing.findById(id);
         if(!listing)
-            return res.json({success:false, message:"Listing is not found "})
-        console.log(listing)
-         if (!userId._id.requals(String(listing.onwer))) {
-             return res.json({ success: false, message: "you are not onwer of this listing" })
-         }
+            return res.status(404).json({success:false, message:"Listing is not found "})
+        
+        if ( user.totalPublicListings == 0 ||  user.id !== listing.owner) {
+            return res.status(400).json({ success: false, message: "you are not onwer of this listing" })
+        }
 
-        const imageFile = req.file;
+        const imageFile = req.files;
         if (!imageFile) {
 
-            await Listing.findByIdAndUpdate(id, {
+        const updateListing =  await Listing.findByIdAndUpdate(id, {
                 title, description, price, location, country,
-                onwer: userId._id, address
+                address
+            },{
+                new :true
+            })
+            return res.json({ success: true, updateListing,   message: "listing update successfull" })
+        }
+
+        const image = listing.image ;
+
+        for(let img of imageFile){
+            const imageUpload = await cloudinary.uploader.upload(img.path)
+            image.push({
+                filename: imageUpload.filename,
+                url: imageUpload.secure_url,
+                public_id : imageUpload.public_id
             })
 
-            return res.json({ success: true, message: "listing update successfull" })
-        }
-        const imageUpload = await cloudinary.uploader.upload(imageFile.path)
+        }   
 
-        const image = [];
-        image.push({
-            filename: "asish",
-            url: imageUpload.secure_url,
-        })
 
-        const updateListingn= await Listing.findByIdAndUpdate(id, {
+        const updateListing= await Listing.findByIdAndUpdate(id, {
             title, description, price, location, country, image,
-            onwer: userId._id, address
+            address
+        },{
+            new: true
         })
+        let exist = await client.exists(`Listing:${updateListing._id}`)
+        if(exist)
+            await client.set(`Listing:${updateListing._id}`, JSON.stringify(updateListing));
 
-        console.log(updateListingn)
-
-        res.json({ success: true,updateListingn, message: "listing update successfull" })
+        res.status(200).json({ success: true, updateListing , message: "listing update successfully" })
 
     } catch (err) {
-        res.json({ success: false, message: err.message })
+        res.status(500).json({ success: false, message: err.message })
     }
 
 }
 
-//get details for updates
-export const getUpdateListingDetails = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const listing = await Listing.findById(id);
-        if (!listing) {
-            return res.json({ success: false, message: "Invalid " })
-        }
-        res.json({ success: true, listing })
 
-
-    } catch (err) {
-        res.json({ success: false, message: err.message })
-    }
-}
 
 
 //delete listing 
@@ -131,31 +128,42 @@ export const deleteListing = async (req, res) => {
 
         const listing = await Listing.findById( id);
         
-         if (!listing) {
+        if (!listing) {
             return res.json({ success: false, message: "listing not exist " })
         }
 
-        if(!listing.onwer.equals(user._id)){
+        if( user.totalPublicListings === 0  ||  listing.owner !== user.id ){
             return res.json({success:false,  message:"Your are not owner of this listing "})
         }
 
-        const deleteListing  = await Listing.findByIdAndDelete(id);
-       user.totalPublicListings= user.totalPublicListings.filter((id)=> !id.equals(listing._id))
-        await user.save();
-         
+        console.log("delete image from cloudinary ")
 
-        res.json({ success: true, message: "listing is deleted" })
+        for(let img of listing.image){
+            await cloudinary.uploader.destroy(img.public_id);
+        }
+
+        const deleteListing  = await Listing.findByIdAndDelete(id);
+
+        await prisma.user.update({where :{email : user.email}, data : {totalPublicListings : user.totalPublicListings -1}})
+        user.totalPublicListings--
+
+         await client.set(`token:${user.id}`, JSON.stringify( user ) , {EX : 12 * 60})
+
+
+        res.status(200).json({ success: true, user ,  message: "listing is deleted Sucessfully " })
     } catch (err) {
-        res.json({ success: false, message: err.message })
+        res.status(500).json({ success: false, message: err.message })
     }
 
 }
 
 //create listing
 export const createListing = async (req, res) => {
-    let  { title, description, price, address, location, country, guestType, category } = req.body;
+    console.log("come in main Controller function ")
+    let  { title,   description, price, address, location, country,  category } = req.body;
     
-    const user = await User.findById(req.user._id);
+    
+    const user = await prisma.user.findUnique({where : {id : req.user.id}});
     address= JSON.parse(address);
 
     try {
@@ -167,59 +175,121 @@ export const createListing = async (req, res) => {
         for (const imageFile of imageFiles) {
             const imageUpload = await cloudinary.uploader.upload(imageFile.path)
 
-            // console.log(imageUpload)
 
             image.push({
                 filename: imageUpload.originalname,
                 url: imageUpload.secure_url,
+                public_id: imageUpload.public_id
             })
         }
 
         const newListing = new Listing({
-            title, description, price, location, country, image,
-            onwer: user._id, address, guestType, category
+            title ,
+            description,
+            price,
+            location, 
+            country,
+            image,
+            owner:user.id,
+            address,
+            category
         })
-        await newListing.save();
-        user.totalPublicListings?.push(newListing._id);
-        await user.save();
 
+        await newListing.save();
+        
+        await prisma.user.update({where : {email : user.email}, data :{totalPublicListings : user.totalPublicListings +1}});
+        user.totalPublicListings++;
+
+        await client.set(`token:${user.id}`, JSON.stringify( user), {EX : 12 * 60})
         res.json({ success: true, newListing, user, message:"Listing create successfully" })
+
         const content= templetListingCreate(newListing._id, user.email,  newListing)
         const info= await transport.sendMail(content);
-        const Listings = await Listing.find({}).populate('_id').select('-password')
-        
+
+        const exists = await client.exists("Listing");
+
         await  client.lPush('Listing', JSON.stringify( newListing));
+        if(!exists)
+            await client.expire("Listing",12* 60);
+        
         
     } catch (err) {
+        console.log(err)
         res.json({ success: false, message: err.message })
     }
-
-
 }
 
 
 export const getAllListingHostByUser = async (req, res) => {
 
     try {
-        
         const user = req.user;
-        const _id = user._id;
-        const listing= await client.lRange(`userListing:${_id}`, 0 , -1);
+        const id = user.id;
+        console.log("user id is", id)
+        // const listing= await client.lRange(`userListing:${_id}`, 0 , -1);
         
-        if(listing.length   > 1){
-            const Listings= listing.map((list)=> JSON.parse(list))
-            return res.json({ success:true, Listings})
-        }
-        const Listings = await Listing.find({ onwer: _id });
-        for(let l of Listings){
+        // if(listing.length   > 1){
+        //     const Listings= listing.map((list)=> JSON.parse(list))
+        //     return res.json({ success:true, Listings})
+        // }
+        const Listings = await Listing.find({ owner: id });
+       // for(let l of Listings){
             
-        await client.lPush(`userListing:${_id}`, JSON.stringify(l));
-        }
-        await client.expire(`userListing:${_id}`, 300)
+        // await client.lPush(`userListing:${_id}`, JSON.stringify(l));
+        // }
+        //await client.expire(`userListing:${_id}`, 300)
         res.json({ success: true, Listings });
         
     } catch (err) {
         console.log(err)
     }
 
+}
+
+
+export const deleteImageLiting = async(req,res)=>{
+    try{
+        console.log("In delete Listing iamge ")
+        const {id}= req.params;
+        let listing = await Listing.findById(id);
+        if(!listing)
+            return res.status(404).json({message:"Listing not found"})
+
+        const user = req.user;
+        const {imageRemove}= req.body;
+        console.log("iamge remove is ",imageRemove)
+
+        if(!imageRemove)
+            return res.status(400).json({message:"ImageRemove is required"})
+
+        if(imageRemove.length >= listing.image.length )
+            return res.status(400).json({message:"one image leave"})
+        const newImage =[]
+
+
+        for(let img of listing.image){
+            let safe= true;
+            for(let rem of imageRemove){
+            
+                if(String(img._id) === rem ){
+                    safe =false;
+                    break;
+                }
+            }
+            if(safe)
+                newImage.push(img)
+            else{
+                await cloudinary.uploader.destroy(img.public_id);
+            }
+        }
+        console.log("new Image push is ", newImage)
+
+        listing.iamge = [...newImage];
+        await listing.save();
+        res.status(200).json({message:"Image remvoed", listing})
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:err.message})
+    }
 }

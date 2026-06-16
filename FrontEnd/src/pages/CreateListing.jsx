@@ -50,8 +50,7 @@ function CreateListing() {
         state: null,
         pinConde: null,
     })
-    // console.log(address)
-    //handle of addres
+    
     const handleAddress = (e) => {
         e.preventDefault();
         setAddress(prev => (
@@ -102,7 +101,6 @@ function CreateListing() {
                 setIsLoading(true)
                 const formData = new FormData();
                 formData.append('title', title)
-                // formData.append('image', image)
                 formData.append('description', description)
                 formData.append('location', location)
                 formData.append('guestType', guestType)
@@ -113,13 +111,13 @@ function CreateListing() {
                     formData.append("image", file);  // 'image' is the name in the backend (multer expects "image" as the field name)
                 });
 
-                const { data } = await axios.post(`${backendUrl}/listing/create`,
+                const { data } = await axios.post(`${backendUrl}/listing`,
                     // title,image, description, address,guestType, category,location
 
                     formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
-                        token: userToken
+                        authorization: `Bearer ${userToken}`
                     }
                 })
                 console.log("After creating listing resonse ", data)

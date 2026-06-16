@@ -12,13 +12,15 @@ import { Home, Plus, RefreshCw } from 'lucide-react';
 function AllListingProfile() {
     const { userData, navigate, backendUrl, userToken } = useContext(AppContext);
     const [allListing, setAllListing]= useState([])
-    const { setListings} = useContext(AppContext)
+    console.log("all Listing host by user", allListing)
+    const {  setListing} = useContext(AppContext)
     const [isLoading, setIsLoading] = useState(true);
 
     const getAllListings = async () => {
         try {
             setIsLoading(true);
-            const { data } = await axios.get(`${backendUrl}/listing/profile/all-listing`, { headers: { token: userToken } });
+            const { data } = await axios.get(`${backendUrl}/listing/all-listing`, { headers: { authorization: `bearer ${userToken}` } });
+            console.log("all listing host by users", data )
             if (data.success) {
                 setAllListing(data.Listings.reverse() || []);
             } else {
@@ -26,7 +28,7 @@ function AllListingProfile() {
             }
         } catch (err) {
             console.error(err);
-            toast.error('Error fetching listings');
+            toast.error(err.message);
         } finally {
             setIsLoading(false);
         }
@@ -73,11 +75,11 @@ function AllListingProfile() {
                 </div>
             </div>
             
-            {setAllListing && setAllListing.length > 0 ? (
+            {allListing && allListing.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 mb-6">
                     {allListing.map((listing, i) => (
                         <ListingCardProfile userData={userData} listing={listing} key={i}
-                        onClick={()=> setListings(listing)} />
+                        onClick={()=> setListing(listing)} />
                     ))}
                 </div>
             ) : (

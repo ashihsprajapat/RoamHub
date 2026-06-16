@@ -3,49 +3,48 @@
 import express from 'express';
 const Router = express.Router();
 import upload from '../config/multer.js';
-import { createListing, deleteListing, getAllListingHostByUser, getAllListings, getListingById, getUpdateListingDetails, updateListing } from './listing.controller.js';
+import { createListing, deleteListing, getAllListingHostByUser, deleteImageLiting, getAllListings, getListingById,  updateListing } from './listing.controller.js';
 import { protectListing ,verifyEmail} from '../middleware/protectListing.js';
 
 
 
-//get all listing
 Router.route("/")  // caching
-    .get(getAllListings);
+    .get(getAllListings)  // get all listing
 
-//update listing by id
-Router.route("/:id/update-listing")   // caching 
-    .get(protectListing, verifyEmail, getUpdateListingDetails)
-    .post(protectListing, verifyEmail, upload.single("image"), updateListing)
-
-
-
-//delete listing
-Router.route("/:id/delete")
-    .delete( protectListing, verifyEmail,  deleteListing)
-
-
-//get a single listing
-Router.route("/:id")
-    .get(getListingById)
-
-//create Listing
-Router.route("/create") // caching
-    .post(
+    .post(                  // create Listing 
         protectListing,
         verifyEmail,
         upload.array("image",8),
         createListing
     );
 
-
 //get all listing host by user
-Router.route("/profile/all-listing")
+Router.route("/all-listing")
 .get(protectListing,
     verifyEmail,
     getAllListingHostByUser   // caching 
 )
+    
+
+Router.route("/:id/")   // caching 
+
+    .put(protectListing,
+        verifyEmail, 
+        upload.array("image", 4),
+          updateListing) // update listing by id
+        
+    .delete( protectListing,
+        verifyEmail,  
+        deleteListing)     // delete listing by id 
+
+    .get(getListingById)                                     // get listing by id 
 
 
+Router.route("/image/:id")
+        .delete(protectListing,
+            verifyEmail,
+            deleteImageLiting
+        )
 
 
 export default Router
