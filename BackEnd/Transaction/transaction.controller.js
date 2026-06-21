@@ -3,6 +3,7 @@ import Razorpay from "razorpay";
 import User from '../User/userSchema.js';
 import { prisma } from "../lib/prisma.js";
 import Listing from "../Listings/listingModel.js";
+import client from "../config/Redis.js";
 
 //getway initailize
 const razorpayInstance = new Razorpay({
@@ -13,8 +14,11 @@ const razorpayInstance = new Razorpay({
 //api to make payment  for credits
 export const paymnetRazorPay = async (req, res) => {
     try {
-        const { totalAmount, paymentType } = req.body;
-
+        const { totalAmount, paymentType, from, to } = req.body;
+        if( !from || !to || !totalAmount || !paymentType  ){
+                return res.status(400).json({ success :false,  message:"missing details"})}
+        if(totalAmount === 0)
+                return res.status(400).json({success:false, message:"Please check Amount"})
         const {user} = req;
         const { id: listingId } = req.params;
 
@@ -23,14 +27,25 @@ export const paymnetRazorPay = async (req, res) => {
         if(!listing)
                 return res.status(404).json({message:"Listing not found"})
 
-        if(listing.isBook)
-            return res.status(400).json({message:"Listing is Already Booked"})
-        console.log("req body is", req.body)
-        
-        if ( totalAmount === null || ! paymentType )
-            return res.json({ success: false, message: "Missing Details" });
 
-        //return res.json({message:"return from here"})
+        const bookings= await prisma.booking.findFirst({
+            where :{
+                listingId ,
+                AND:[
+                    {
+                        from : {
+                            lt : new Date(to)
+                        },
+                        to:{
+                            gt : new Date(from)
+                        }
+                    }
+                ]
+            }
+        })
+
+        if(bookings)
+            return res.status(400).json({message:"Selected dates are already booked for this listing."})
 
         const transaction = await prisma.transaction.create({
             data:{
@@ -46,7 +61,11 @@ export const paymnetRazorPay = async (req, res) => {
         const options = {
             amount: amount * 100,
             currency: process.env.CURRENCY,
-            receipt: transaction.id
+            receipt: transaction.id,
+            notes: {
+                listingId: listingId,
+                userId: user.id
+            }
         };
 
 
@@ -64,101 +83,107 @@ export const paymnetRazorPay = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-//e1ede6d4-621a-4fee-a4b2-5392be432d9c
 
 //api controller finction to verify razorpay payment verifu
 export const verifyRazorpay = async (req, res, next) => {
    
     try {
-        const { razorpay_order_id, from , to , totalAmount, TotalNights, pernightCharge  } = req.body;
-       
-        let guests = [
-            {
-                name:"Ashish",
-                age:21,
-                gender:"Male"
-            },
-            {
-                name:"Anisha",
-                age:23,
-                gender:"FeMale"
-            }
-            , {
-                name:"Vishal",
-                age:19,
-                gender:"Male"
-            }
-        ]
+        const { razorpay_order_id, from , to , totalAmount, TotalNights, pernightCharge , guests } = req.body;
+        
+        if( !totalAmount || !from || !to || !TotalNights || !pernightCharge || !guests)
+                return res.status(400).json({message:"Missing details"})
+        if(totalAmount <=0)
+            return res.status(400).json({message:"please selecte date   "})
         if (!razorpay_order_id)
             return res.json({ success: false, message: "razorpay_order_id is requried" })
 
         const orderinfo = await razorpayInstance.orders.fetch(razorpay_order_id)
 
-        console.log("Orderinfo of razorPay", orderinfo)
-
         if (orderinfo.status === 'paid') {
 
             let transactionData = await prisma.transaction.findUnique({where:{id : orderinfo.receipt}})
-            console.log("getting trnasaction from trnas", transactionData)
 
-            console.log("Update trnasaction paymentstatus")
+            const listingId = orderinfo.notes.listingId
 
-            transactionData =  await prisma.transaction.update({where:{id : transactionData.id},
-            data:{
-                paymentStatus : "SUCCESS"
-            }})
-
-            let user = await prisma.user.findUnique({where : {id : String(req.user.id)}})
-            console.log("user from db ", user)
-            const listingId = transactionData.listingId
             const listing = await Listing.findById(listingId);
-                    
-            const newBooking = await prisma.booking.create({
-                data:{
-                    ownerId : req.user.id,
-                    listingId : String(listing._id),
-                    from : new Date(from) ,
-                    to  : new Date(to) ,
-                    totalAmount,
-                    paymentStatus : transactionData.paymentStatus,
-                    transactionId : transactionData.id,
-                    TotalNights,
-                    pernightCharge,
-                }
-            })
-            for(let g of guests ){
-                await prisma.guest.create({data:{
-                    name : g.name,
-                    age : g.age,
-                    gender : g.gender,
-                    bookingId : newBooking.id
-                }})
-            } 
-            console.log("user is updating totalBooking ")
-            console.log("user value", user)
-            let  updateuser =  await prisma.user.update({
+            if(!listing)
+                return res.status(404).json({message:"Listing not found", success:false})
+
+
+            const result= await prisma.$transaction(async(tx)=>{
+                
+                transactionData =  await tx.transaction.update({where:{id : orderinfo.receipt},
+                    data:{
+                        paymentStatus : "SUCCESS"
+                    }}
+                )   
+                const newBooking = await tx.booking.create({
+                    data:{
+                        ownerId : req.user.id,
+                        listingId : String(listing._id),
+                        from : new Date(from) ,
+                        to  : new Date(to) ,
+                        totalAmount,
+                        paymentStatus : transactionData.paymentStatus,
+                        transactionId : transactionData.id,
+                        TotalNights,
+                        pernightCharge,
+                        listingTitle :listing.title,
+                        listingAddress : listing.location,
+                        listingImage :listing.image[0].url
+
+                    }
+                })  
+
+                
+
+                await tx.guest.createMany({
+                    data:guests.map((g, i)=> ({
+                        name : g.name,
+                        age:g.age,
+                        gender : g.gender,
+                        bookingId : newBooking.id
+                    }))
+                })
+
+                console.log("exception is created")
+                
+
+                let  updateuser =  await tx.user.update({
                     where:
-                        {id : user.id},
+                        {id : req.user.id},
                     data :{
-                        totalBookings : user.totalBookings + 1
-                    }})
-                    
-            
-                    console.log("listing isBook update")
-                    listing.isBook = true;
-                    listing.currentBooking.push( newBooking.id);
-                    await listing.save();
-                    
-            
+                        totalBookings:{
+                            increment:1
+                        }
+                }})
+
+                return {
+                    newBooking,
+                    user: updateuser, 
+                    transaction : transactionData
+                }
+
+
+            })
+
+                await client.set(
+                    `user:${result.user.id}`,
+                    JSON.stringify(result.user),
+                    {
+                        EX: 10 * 60
+                    }
+                );
+
                     return res.status(200).json({
                         success: true,
-                        booking: newBooking,
-                        user : updateuser,
-                        message: "Booking conformed"
+                        booking: result.newBooking,
+                        user : result.user,
+                        message: "Booking conformed",
                     });
         }
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         res.status(500).json({message:error.message})
     }
 }

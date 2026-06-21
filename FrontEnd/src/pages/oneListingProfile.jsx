@@ -1,49 +1,42 @@
 
-import  { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import AppContext from '../context/AppContext'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { MapPin, IndianRupee, Calendar, User, Home, Star, Edit, Trash2, Clock, } from 'lucide-react'
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid
+} from "recharts";
 
 import toast from 'react-hot-toast';
 
 function OneListingProfile() {
-    const { userData, backendUrl, userToken, navigate, setEditListing , listing, setListing} = useContext(AppContext);
+    const { userData, backendUrl, userToken, navigate, setEditListing, listing, GetListingData, getUserdata } = useContext(AppContext);
     const { list_id } = useParams();
-    console.log("listing from context",listing)
 
     const [bookings, setBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('details');
+    const [get, setGet] = useState(false);
 
-    useEffect(()=> {
+    useEffect(() => {
+        if (!userData)
+            getUserdata()
+
         if (list_id && userToken) {
-            fetchListingDetails();
+            if (!listing)
+                GetListingData(list_id)
             fetchListingBookings()
         }
     }, [list_id, userToken]);
-    
-    console.log("all booking", bookings)
 
-    const fetchListingDetails = async () => {
-        try {
-            setIsLoading(true);
-            const { data } = await axios.get(`${backendUrl}/listing/${list_id}`, {
-                headers: { authorization: `Bearer ${userToken}` }
-            });
 
-            console.log("listing data is ", data )
-            if (data.success) {
-                setListing(data.listing.listing);
-                setBookings(data.listing.currentBooking)
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error('Error fetching listing details');
-        } finally {
-            setIsLoading(false);
-        }
-    };  
 
     const fetchListingBookings = async () => {
         try {
@@ -51,18 +44,20 @@ function OneListingProfile() {
                 headers: { authorization: `Bearer ${userToken}` }
             });
 
-            console.log("all Booking are", data )
 
             if (data.success) {
                 setBookings(data.bookings || []);
-            } 
+            }
         } catch (err) {
             console.error(err);
             toast.error('Error fetching booking details');
         }
+        finally {
+            setGet(true)
+        }
     };
 
-    console.log("all bookings", bookings)
+    console.log("booking details ", bookings)
 
     const handleDeleteListing = async () => {
         if (!window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
@@ -85,10 +80,83 @@ function OneListingProfile() {
     };
 
 
+    const getMonthData = (bookings) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const data = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+
+            const currentDate = new Date(year, month, day);
+            currentDate.setHours(0, 0, 0, 0);
+
+            let matchedBooking = null;
+
+            for (const booking of bookings) {
+
+                const from = new Date(booking.from);
+                const to = new Date(booking.to);
+
+                from.setHours(0, 0, 0, 0);
+                to.setHours(0, 0, 0, 0);
+
+                if (currentDate >= from && currentDate <= to) {
+                    matchedBooking = booking;
+                    break;
+                }
+            }
+
+            data.push({
+                day,
+                occupied: matchedBooking ? 1 : 0,
+                booking: matchedBooking
+            });
+        }
+
+        return data;
+    };
+
+
+    const CustomTooltip = ({ active, payload }) => {
+        if (!active || !payload?.length) return null;
+
+        const booking = payload[0].payload.booking;
+        
+
+        if (!booking) {
+            return (
+                <div className="bg-white p-3 border rounded shadow">
+                    No Booking
+                </div>
+            );
+        }
+
+        return (
+            <div className="bg-white p-3 border rounded shadow">
+                <p><b>{booking.user.name}</b></p>
+                <p>{booking.user.email}</p>
+                <p>₹{booking.totalAmount}</p>
+                <p>{booking.TotalNights} Nights</p>
+                <p>
+                    {new Date(booking.from).toLocaleDateString()}
+                </p>
+                <p>
+                    {new Date(booking.to).toLocaleDateString()}
+                </p>
+            </div>
+        );
+    };
+
+    const chartData = getMonthData(bookings);
+
 
     const handleEditListing = () => {
         setEditListing(listing);
-        navigate(`/${list_id}/edit`);
+        navigate(`/edit/${list_id}`);
     };
 
     if (isLoading) {
@@ -111,6 +179,28 @@ function OneListingProfile() {
                 </div>
             </div>
         );
+    }
+
+    if (list_id === "listing") {
+        return (
+            <div className="w-full min-h-[60vh] flex items-center justify-center px-4 py-16">
+                <div className="max-w-xl w-full bg-white border border-gray-200 rounded-3xl shadow-lg p-8 text-center">
+                    <div className="mb-6">
+                        <Home className="mx-auto h-16 w-16 text-rose-500" />
+                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-3">Please select a listing</h2>
+                    <p className="text-gray-600 leading-relaxed">
+                        Choose one of your listings from the <span className="font-semibold text-gray-800">My Listings</span> section to view or manage it here.
+                    </p>
+                    <button
+                        onClick={() => navigate('/profile/' + userData._id + '/all-listings')}
+                        className="px-4 py-2 bg-rose-400 mt-10 text-white rounded-lg hover:bg-rose-500 transition-colors"
+                    >
+                        Back to My Listings
+                    </button>
+                </div>
+            </div>
+        )
     }
 
     if (!listing) {
@@ -186,10 +276,15 @@ function OneListingProfile() {
                         Listing Details
                     </button>
                     <button
-                        onClick={() => setActiveTab('bookings')}
+
+                        onClick={() => {
+                            if (!get)
+                                return;
+                            setActiveTab('bookings')
+                        }}
                         className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'bookings' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                     >
-                        Bookings ({bookings?.length})
+                        Bookings
                     </button>
                 </div>
             </div>
@@ -228,7 +323,7 @@ function OneListingProfile() {
                                         <Star className="w-5 text-yellow-500  h-5 " />
                                         <div>
                                             <p className="text-sm text-gray-500">reviews</p>
-                                            <p className="font-medium text-gray-700">{listing.reviewsCount  ||  0 }  reviews yet</p>
+                                            <p className="font-medium text-gray-700">{listing.reviewsCount || 0}  reviews yet</p>
                                         </div>
                                     </div>
                                 </div>
@@ -280,9 +375,12 @@ function OneListingProfile() {
                                     <Calendar className="w-4 h-4 text-gray-500" />
                                     <span className="text-gray-700">Availability</span>
                                 </div>
-                                <p className="text-gray-600 text-sm">
-                                    {!listing.isBook ? 'Available for booking' : 'Currently unavailable'}
-                                </p>
+
+                                {!listing.isBook ?
+                                    <p className="text-gray-600 text-sm"> Available for booking  </p> :
+                                    <p className="text-gray-600 text-sm  text-red-500 ">Currently unavailable</p>
+                                }
+
                             </div>
 
                             <div className="mb-4">
@@ -290,7 +388,7 @@ function OneListingProfile() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Total Bookings</p>
-                                        <p className="text-lg font-semibold text-gray-800">{listing.currentBooking.length || 0}</p>
+                                        <p className="text-lg font-semibold text-gray-800">{listing.totalBookings || 0}</p>
                                     </div>
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Views</p>
@@ -315,7 +413,7 @@ function OneListingProfile() {
                     <div className="p-6">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Booking History</h2>
 
-                        {listing.currentBooking.length > 0 ? (
+                        {bookings.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
@@ -327,10 +425,16 @@ function OneListingProfile() {
                                                 Dates
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Price
+                                                Price/night
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
+                                                totalNights
+                                            </th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                TotalAmount
+                                            </th>
+                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Payment Status
                                             </th>
                                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Booked On
@@ -347,28 +451,37 @@ function OneListingProfile() {
                                                         </div>
                                                         <div className="ml-4">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {booking.guest?.name || 'Guest'}
+                                                                {booking.user.name || 'Guest'}
                                                             </div>
                                                             <div className="text-sm text-gray-500">
-                                                                {booking.guest?.email || 'Email not available'}
+                                                                {booking.user?.email || 'Email not available'}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-900">
-                                                        {booking.bookingDuration ? new Date(booking.bookingDuration.from).toLocaleDateString() : 'Not set'} to
+                                                        {new Date(booking.from).toLocaleDateString()}
+                                                    </div>
+                                                    <div className='px-6 justify-center '>
+                                                        to
                                                     </div>
                                                     <div className="text-sm text-gray-500">
-                                                        {booking.bookingDuration ? new Date(booking.bookingDuration.to).toLocaleDateString() : 'Not set'}
+                                                        {new Date(booking.to).toLocaleDateString()}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">₹{booking.totalPrice || 0}</div>
+                                                    <div className="text-sm font-medium text-gray-900">₹{booking.pernightCharge || 0}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
-                                                        {booking.paymentStatus || 'Processing'}
+                                                    <div className="text-sm font-medium text-gray-900">₹{booking.TotalNights || 0}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-900">₹{booking.transaction.totalAmount || 0}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.transaction.paymentStatus)}`}>
+                                                        {booking.transaction.paymentStatus || 'Processing'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -382,6 +495,25 @@ function OneListingProfile() {
                                         ))}
                                     </tbody>
                                 </table>
+                                <ResponsiveContainer width="100%" height={200} className={"mt-20 "} >
+                                    <BarChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+
+                                        <XAxis dataKey="day" />
+
+                                        <YAxis
+                                            domain={[0, 1]}
+                                            ticks={[0, 1]}
+                                        />
+
+                                        <Tooltip content={<CustomTooltip />} />
+
+                                        <Bar
+                                            dataKey="occupied"
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                         ) : (
                             <div className="text-center py-8">
@@ -394,9 +526,10 @@ function OneListingProfile() {
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
 
-        </div>
+        </div >
     )
 }
 
@@ -409,7 +542,7 @@ function getStatusColor(status) {
             return 'bg-yellow-100 text-yellow-800';
         case 'cancelled':
             return 'bg-red-100 text-red-800';
-        case 'completed':
+        case 'success':
             return 'bg-blue-100 text-blue-800';
         default:
             return 'bg-gray-100 text-gray-800';

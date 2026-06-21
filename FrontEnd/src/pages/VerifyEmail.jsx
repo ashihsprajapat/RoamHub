@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast"
 
 const VerifyEmail = () => {
 
-    const { userData, backendUrl, userToken, setUserData } = useContext(AppContext)
+    const { userData, navigate, backendUrl, userToken, setUserData } = useContext(AppContext)
     const [otp, setOtp] = useState("");
     const [timeing, setTiming] = useState(false)
 
@@ -31,10 +31,13 @@ const VerifyEmail = () => {
         return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
     };
 
+    const [loading, setLoading] = useState(false);
+
 
     const sendOTP = async () => {
         try {
-            const { data } = await axios.post(`${backendUrl}/auth/sendOTP`, {}, { headers: { token: userToken } })
+            setLoading(true);
+            const { data } = await axios.post(`${backendUrl}/auth/sendOTP`, {}, { headers: { authorization: `Bearer ${userToken}` } })
             console.log("data  after sending otp ", data)
             if (data.success) {
                 toast.success(data.message)
@@ -42,24 +45,33 @@ const VerifyEmail = () => {
             } else
                 toast.error(data.message)
         } catch (error) {
+
             console.log(error)
+        }
+        finally {
+            setLoading(false);
         }
     }
 
     //verify calling 
     const verify = async (e) => {
         try {
+
             e.preventDefault()
-            const { data } = await axios.post(`${backendUrl}/auth/verifyOtp`, { otp: otp }, { headers: { token: userToken } })
-            console.log("verify otp response", data)
+            setLoading(true);
+            const { data } = await axios.post(`${backendUrl}/auth/verifyOtp`, { otp: otp }, { headers: { authorization: `Bearer ${userToken}` } })
+          
             if (data.success) {
                 setUserData(data.user);
                 toast.success(data.message)
+                navigate(`/profile/${userData.id}`)
             } else {
                 toast.error(data.message)
             }
         } catch (error) {
-            console.log(error.message)
+            console.log(error)
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -103,7 +115,7 @@ const VerifyEmail = () => {
 
                         <button
                             type="button"
-                            disabled={timeLeft > 0 || userData?.verify}
+                            disabled={timeLeft > 0 || userData?.verify || loading}
                             title={userData?.verify ? "You have already verified" : timeLeft > 0 ? "Wait for current OTP to expire" : ""}
                             className={`border border-white px-4 py-2 rounded-xl bg-green-950 text-white  ${(timeLeft > 0 || userData?.verify) ? "cursor-not-allowed opacity-60" : "cursor-pointer"} `}
                             onClick={sendOTP}
@@ -129,12 +141,15 @@ const VerifyEmail = () => {
                                 By submitting, you agree to our <span className='text-gray-800'>Terms</span> and <span className='text-gray-800'>Privacy Policy</span>.
                             </p>
                             <button
-                                disabled={userData?.verify}
+                                disabled={loading || userData?.verify}
                                 title={userData?.verify ? "You have already verified" : ""}
                                 onClick={(e) => verify(e)}
                                 type="submit"
                                 className={`bg-liner-to-r from-red-600 to-red-900 bg-green-600  border-2 border-green-900 hover:from-green-600 hover:to-green-950 text-white text-md px-5 md:px-16 py-3 rounded-full transition duration-300 cursor-pointer    ${userData?.verify ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                                Verify
+                                {
+                                    loading ? "Verify...." : "Verify"
+                                }
+
                             </button>
                         </div>
                     </form>

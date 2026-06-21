@@ -4,14 +4,12 @@ import client from '../config/Redis.js';
 import {templetListingCreate, transport} from '../config/NodeMailer.js'
 import User from '../User/userModel.js';
 import { prisma } from '../lib/prisma.js';
+
+
 //get all listings
 export const getAllListings = async (req, res) => {
     try {
-    
-        //let listingInRedis= await client.lRange("Listing",0, -1)
-        
-        const Listings = await Listing.find({isBook: false});
-        //console.log("get all Listing ", Listings)
+        const Listings = await Listing.find({});
         res.json({ success: true, Listings });
 
     } catch (err) {
@@ -23,33 +21,63 @@ export const getAllListings = async (req, res) => {
 //get a single listing by id
 export const getListingById = async (req, res) => {
     const { id } = req.params;
+    const {booking}= req.query;
+    
     try {
-
+        let listing;
         const Redlisting= await client.get(`Listing:${id}`);
+        
         if(Redlisting){
-            let listing= JSON.parse( Redlisting);
-            return res.json({success:true,  listing})
+            listing= JSON.parse( Redlisting);
+        }else{
+            listing = await Listing.findById(id)
+                if (!listing) {
+                    return res.status(404).json({ success: false, message: "Listing not found " })
+                }
+            
+            await client.set(`Listing:${id}`, JSON.stringify(listing), {EX: 60 * 5})
         }
 
-        const listing = await Listing.findById(id)
-        if (!listing) {
-            return res.status(404).json({ success: false, message: "Listing not found " })
-        }
         const reviews = await prisma.review.findMany({
             where:{
                 listingId : id
+            },
+            include:{
+                user : {
+                select:{
+                    name:true,
+                    email:true,
+                    id:true
+                }}
             },
             orderBy :{
                 rating:'desc'
             },
             take : Math.min(5, listing.reviewsCount)
         })
+
+        let bookings= null;
+        if(booking){
+            let today = new Date();
+            bookings= await prisma.booking.findMany({
+                where:{
+                    listingId : id,
+                    to:{
+                        gte: today
+                    }
+                },
+                select:{
+                    from:true,
+                    to:true
+                }
+            })
+        }
         const response = {
             listing,
-            reviews
+            reviews,
+            bookings
         }
         res.json({ success: true, response })
-        await client.set(`Listing:${id}`, JSON.stringify(response), {EX: 60 * 5})
     } catch (err) {
         console.log(err)
         res.json({ success: false, message: err.message })
@@ -59,8 +87,9 @@ export const getListingById = async (req, res) => {
 
 //update listing by id and new data
 export const updateListing = async (req, res) => {
+    console.log("req is comming for update listing")
     const { title, description, price, address, location, country } = req.body;
-    console.log(req.body)
+    
 
     const user = req.user;
     const { id } = req.params;
@@ -74,16 +103,14 @@ export const updateListing = async (req, res) => {
         }
 
         const imageFile = req.files;
+        let updateListing ;
         if (!imageFile) {
 
-        const updateListing =  await Listing.findByIdAndUpdate(id, {
+        updateListing =  await Listing.findByIdAndUpdate(id, {
                 title, description, price, location, country,
                 address
-            },{
-                new :true
             })
-            return res.json({ success: true, updateListing,   message: "listing update successfull" })
-        }
+        }else{
 
         const image = listing.image ;
 
@@ -94,19 +121,27 @@ export const updateListing = async (req, res) => {
                 url: imageUpload.secure_url,
                 public_id : imageUpload.public_id
             })
-
         }   
 
 
-        const updateListing= await Listing.findByIdAndUpdate(id, {
+        updateListing= await Listing.findByIdAndUpdate(id, {
             title, description, price, location, country, image,
             address
-        },{
-            new: true
         })
+        }
+        const reviews = await prisma.review.findMany({
+            where:{
+                listingId : id
+            },
+            orderBy :{
+                rating:'desc'
+            },
+            take : Math.min(5, listing.reviewsCount)
+            })
+       
         let exist = await client.exists(`Listing:${updateListing._id}`)
         if(exist)
-            await client.set(`Listing:${updateListing._id}`, JSON.stringify(updateListing));
+            await client.set(`Listing:${updateListing._id}`, JSON.stringify({listing : updateListing, reviews}), {EX: 60 * 5});
 
         res.status(200).json({ success: true, updateListing , message: "listing update successfully" })
 

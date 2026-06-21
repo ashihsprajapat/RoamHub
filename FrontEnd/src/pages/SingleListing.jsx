@@ -3,8 +3,9 @@ import { Navigate, useParams } from 'react-router-dom'
 import { toast } from 'react-hot-toast';
 import AppContext from '../context/AppContext';
 import axios from 'axios';
-import { MapPin, Calendar, Home, Star, ArrowLeft, ArrowRight, Share2, Heart } from 'lucide-react';
-
+import { MapPin, Calendar, Home, Star, ArrowLeft, ArrowRight, Share2, Heart, UserRoundPen, CircleX } from 'lucide-react';
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 
 
 function SingleListing() {
@@ -22,21 +23,78 @@ function SingleListing() {
         reviewSubLoading, setReviewSubLoading,
         allReview, setAllReviews,
         GetListingData,
-        isLoading,
+        isLoading, navigate,
+        setUserData,
+        listingBookingDetails
 
     } = useContext(AppContext);
 
+    const [range, setRange] = useState({
+        from: undefined,
+        to: undefined,
+    });
+
     useEffect(() => {
-        if (Onelisting)
-            return
-        GetListingData(id);
+        GetListingData(id, true);
         window.scrollTo(0, 0);
     }, [id]);
+    console.log("Listting booking details are ", listingBookingDetails)
+
+    const bookedRanges = listingBookingDetails.map((booking) => ({
+        from: new Date(booking.from),
+        to: new Date(booking.to),
+    }));
 
     const handleImgChange = (url, index) => {
         setCurrentImage(url);
         setCurrentImageIndex(index);
     }
+
+    // for guestes 
+    const [guests, setGuests] = useState([]);
+    const [name, setName] = useState("");
+    const [gender, setGender] = useState("Male");
+    const [age, setAge] = useState(18);
+    const [adharLast4, setAdharLast4] = useState("");
+    const [guestFormshow, setGuestFormshow] = useState(false);
+
+    const [skip, setSkip] = useState(0);
+
+    const handleAddGuest = (e) => {
+        e.preventDefault();
+
+        if (!name.trim()) {
+            toast.error("Name is required");
+            return;
+        }
+        if (!age || Number(age) <= 0) {
+            toast.error("Please enter a valid age");
+            return;
+        }
+        if (!gender) {
+            toast.error("Please select a gender");
+            return;
+        }
+
+        setGuests((prevGuests) => [
+            ...prevGuests,
+            {
+                name: name.trim(),
+                age: Number(age),
+                gender,
+                adharLast4: adharLast4.trim(),
+            },
+        ]);
+        setName("");
+        setAge(18);
+        setGender("Male");
+        setAdharLast4("");
+    };
+
+    const removeGuest = (idx) => {
+        setGuests((prev) => prev.filter((_, i) => i !== idx));
+    };
+
 
     const nextImage = () => {
         if (Onelisting && Onelisting.image && Onelisting.image.length > 0) {
@@ -71,21 +129,20 @@ function SingleListing() {
         e.preventDefault()
         setReviewSubLoading(true);
         try {
-            const { data } = await axios.post(`${backendUrl}/revies/create-review/${id}`, {
+            const { data } = await axios.post(`${backendUrl}/reviews/${id}`, {
                 rating,
                 comment
             }, {
                 headers: {
-                    token: userToken
+                    authorization: `Bearer ${userToken}`
                 }
             });
-
-
             if (data.success) {
                 toast.success("Review submitted successfully");
                 setRating(0);
                 setComment("");
-                allReview.unshift({ rating, comment, ownerName: userData.name, createdAt: Date.now(), })
+
+                allReview.unshift(data.newReview)
             } else {
                 toast.error(data.message);
             }
@@ -107,18 +164,18 @@ function SingleListing() {
             if (!id || !Rid) {
                 toast.error("something went wrong")
             }
-            const { data } = await axios.post(`${backendUrl}/revies/${id}/${Rid}/delete`,
-                {},
-                { headers: { token: userToken } })
+            const { data } = await axios.delete(`${backendUrl}/reviews/${id}/${Rid}`,
+                { headers: { authorization: `Bearer ${userToken}` } })
             if (data.success) {
                 toast.success("Review deleted successfully")
                 setAllReviews(allReview => (
-                    allReview.filter((review) => (review._id !== Rid))
+                    allReview.filter((review) => (review.id !== Rid))
                 ))
             } else {
                 toast.error(data.message)
             }
         } catch (err) {
+            console.log(err)
             toast.error(err.message)
         }
     }
@@ -129,25 +186,21 @@ function SingleListing() {
         toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     }
 
+    const [loading, setLoading] = useState(false);
+
     //for placing order like from to guest all details
     const [from, setFrom] = useState(new Date().toISOString().split('T')[0]);
     const [to, setTo] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]);
-    const [guestCount, setGuestCount] = useState(2);
     const [total, setTotal] = useState(1);
     const [night, setNight] = useState(2);
 
-
-
-
-    //maintain when from and to change then calculate totalPrice and nights also
     useEffect(() => {
 
         const fromDate = new Date(from).getTime();
         const toDate = new Date(to).getTime();
 
-        // Calculate difference in days including both from and to dates
         const diffTime = toDate - fromDate;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((diffTime + 1) / (1000 * 60 * 60 * 24));
         setNight(diffDays);
 
         setTotal(diffDays * price)
@@ -155,10 +208,19 @@ function SingleListing() {
 
     }, [from, to])
 
+    useEffect(() => {
+        if (range?.from) {
+            setFrom(range.from.toISOString().split("T")[0]);
+        }
 
-//pay_T1MfMK2yIv0crL
+        if (range?.to) {
+            setTo(range.to.toISOString().split("T")[0]);
+        }
+    }, [range]);
+
+
     const initPay = async (order) => {
-        
+
         const options = {
             key: import.meta.env.VITE_ROZORPAY_ID,
             amount: order.amount,
@@ -176,15 +238,17 @@ function SingleListing() {
                     const verifyData = {
                         ...response,
                         from, to,
-                        totalAmount : total,
+                        totalAmount: total,
                         TotalNights: night,
-                        pernightCharge : Onelisting.price
+                        pernightCharge: Onelisting.price,
+                        guests
                     }
                     const { data } = await axios.post(`${backendUrl}/transaction/verify`, verifyData, { headers: { authorization: `Bearer ${userToken}` } })
-                    console.log("data getting from verify Paymnet", data)
+
                     if (data.success) {
                         toast.success(data.message)
-                        Navigate(`/profile/${userData._id}/all-booking`)
+                        setUserData(data.user)
+                        navigate(`/profile/${userData.id}/all-booking`)
 
                     }
                 } catch (error) {
@@ -196,30 +260,86 @@ function SingleListing() {
         rzp.open()
     }
 
+
+    //create a transaction for payment 
     const paymentRazorpay = async () => {
         try {
+            setLoading(true);
+            if (guests.length == 0) {
+                toast.error("Please enter form detils")
+                return;
+            }
 
             let paymentType = "online";
-            const { data } = await axios.post(`${backendUrl}/transaction/payment/${id}`, { totalAmount: total, paymentType }, { headers: { authorization: `Bearer ${userToken}` } })
-            console.log("data for transaction payment response", data)
+            const { data } = await axios.post(`${backendUrl}/transaction/payment/${id}`, { totalAmount: total, paymentType, from, to }, { headers: { authorization: `Bearer ${userToken}` } })
+
             if (data.success) {
                 initPay(data.order);
             }
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.response.data.message)
+        } finally {
+            setLoading(false);
         }
     }
 
-    console.log("totalAmount", total)
-
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="rounded-lg bg-gray-200 h-64 w-full max-w-3xl mb-4"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl space-y-8">
+                    <div className="rounded-3xl bg-white shadow-lg p-6 animate-pulse">
+                        <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
+                        <div className="grid gap-6 lg:grid-cols-3">
+                            <div className="h-80 bg-gray-200 rounded-3xl"></div>
+                            <div className="lg:col-span-2 space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="h-24 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-24 bg-gray-200 rounded-xl"></div>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="h-20 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-20 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-20 bg-gray-200 rounded-xl"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-6 lg:grid-cols-3">
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="rounded-3xl bg-white shadow-lg p-6 animate-pulse">
+                                <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
+                                <div className="space-y-3">
+                                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                                </div>
+                            </div>
+                            <div className="rounded-3xl bg-white shadow-lg p-6 animate-pulse">
+                                <div className="h-5 bg-gray-200 rounded w-1/4 mb-4"></div>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="h-20 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-20 bg-gray-200 rounded-xl"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="rounded-3xl bg-white shadow-lg p-6 animate-pulse">
+                                <div className="h-5 bg-gray-200 rounded w-1/2 mb-4"></div>
+                                <div className="space-y-3">
+                                    <div className="h-12 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-12 bg-gray-200 rounded-xl"></div>
+                                    <div className="h-12 bg-gray-200 rounded-xl"></div>
+                                </div>
+                            </div>
+                            <div className="rounded-3xl bg-white shadow-lg p-6 animate-pulse">
+                                <div className="h-5 bg-gray-200 rounded w-1/3 mb-4"></div>
+                                <div className="h-10 bg-gray-200 rounded-xl"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -402,66 +522,181 @@ function SingleListing() {
 
                         }}>
                             <div>
-                                <div className="grid grid-cols-2 gap-2 mb-4">
-                                    <div className="border border-gray-300 rounded-tl-lg rounded-bl-lg p-3">
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
-                                        <input value={from} onChange={(e) => setFrom(e.target.value)} type="date" className="w-full text-sm focus:outline-none" />
-                                    </div>
-                                    <div className="border border-gray-300 rounded-tr-lg rounded-br-lg p-3">
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">to</label>
-                                        <input value={to} onChange={(e) => setTo(e.target.value)} type="date" className="w-full text-sm focus:outline-none" />
+                               
+
+                                <div className="bg-white rounded-xl border p-4">
+                                    <h3 className="font-semibold mb-3">
+                                        Select Booking Dates
+                                    </h3>
+
+                                    <DayPicker
+                                        mode="range"
+                                        selected={range}
+                                        onSelect={setRange}
+                                        disabled={[
+                                            {
+                                                before: new Date(), // disable today and previous dates
+                                            },
+                                            ...bookedRanges,
+                                        ]}
+                                    />
+
+                                    <div className="mt-4 flex justify-between text-sm">
+                                        <div>
+                                            <span className="font-semibold">From:</span>{" "}
+                                            {range?.from?.toLocaleDateString() || "Not selected"}
+                                        </div>
+
+                                        <div>
+                                            <span className="font-semibold">To:</span>{" "}
+                                            {range?.to?.toLocaleDateString() || "Not selected"}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="border border-gray-300 rounded-lg p-3 mb-4">
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">GUESTS</label>
-                                    <select className="w-full text-sm focus:outline-none bg-transparent" value={guestCount} onChange={(e) => setGuestCount(parseInt(e.target.value))} >
-                                        {
-                                            [1, 2, 3, 4, 5].map((guest, i) => (
-                                                <option key={i} >{guest} {guest === 1 ? "guest" : "guests"} </option>
-                                            ))
+                                <div className="border flex items-center justify-between border-gray-300 rounded-lg p-3 mb-4">
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">GUESTS Form</label>
+                                    {
+                                        guestFormshow ?
+                                            <CircleX color="#b22e2e" strokeWidth={2.5}
+                                                className='cursor-pointer'
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    setGuestFormshow(!guestFormshow)
+                                                }}
+                                            />
+                                            :
+                                            <UserRoundPen color="#b22e2e"
+                                                className='cursor-pointer border-2 border-orange-600 rounded-full p-1 '
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    setGuestFormshow(!guestFormshow)
+                                                }} />
+                                    }
+
+                                </div>
+                                {
+                                    guestFormshow &&
+                                    <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+                                        <div className="space-y-4">
+                                            <div className='flex gap-4'>
+                                                <div className='flex-1'>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="guest-name">Name</label>
+                                                    <input
+                                                        id="guest-name"
+                                                        type="text"
+                                                        required
+                                                        value={name}
+                                                        onChange={(e) => setName(e.target.value)}
+                                                        placeholder="Enter guest name"
+                                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                                    />
+                                                </div>
+
+                                                <div className='flex-1'>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="guest-adhar">Aadhaar Last 4 </label>
+                                                    <input
+                                                        id="guest-adhar"
+                                                        type="text"
+                                                        maxLength={4}
+                                                        value={adharLast4}
+                                                        onChange={(e) => setAdharLast4(e.target.value.replace(/[^0-9]/g, ''))}
+                                                        placeholder="1234 Optional"
+                                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className='flex gap-4'>
+                                                <div className='flex-1'>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="guest-age">Age</label>
+                                                    <input
+                                                        id="guest-age"
+                                                        type="number"
+                                                        required
+                                                        min="1"
+                                                        value={age}
+                                                        onChange={(e) => setAge(e.target.value)}
+                                                        placeholder="Enter age"
+                                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                                    />
+                                                </div>
+
+                                                <div className='flex-1'>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="guest-gender">Gender</label>
+                                                    <select
+                                                        id="guest-gender"
+                                                        required
+                                                        value={gender}
+                                                        onChange={(e) => setGender(e.target.value)}
+                                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                                    >
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleAddGuest}
+                                                className="w-fit px-4  bg-orange-400  text-white py-1 rounded-lg font-medium transition-colors"
+                                            >
+                                                Add Guest
+                                            </button>
+                                        </div>
+
+                                        {guests.length > 0 && (
+                                            <div className="mt-4">
+                                                <h3 className="text-sm font-semibold text-gray-900 mb-2">Added Guests</h3>
+                                                <ul className="space-y-2 text-sm text-gray-700">
+                                                    {guests.map((guest, index) => (
+                                                        <li key={index} className="rounded-lg border border-gray-200 p-3 bg-gray-50">
+                                                            <div className="flex justify-between gap-4 items-center">
+                                                                <span className="font-medium text-gray-900">{guest.name}</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-gray-700">{guest.age} yrs</span>
+
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex justify-between gap-4 text-gray-600 mt-2">
+                                                                <span>{guest.gender}</span>
+                                                                <CircleX
+                                                                    type="button"
+                                                                    onClick={() => removeGuest(index)}
+                                                                    className="ml-2 inline-flex items-center justify-center h-7 rounded-full  text-red-600 cursor-pointer  size-1 w-3"
+                                                                    aria-label={`Remove ${guest.name}`}
+                                                                />
+
+                                                                {guest.adharLast4 && (
+                                                                    <span>{`Aadhaar: ${guest.adharLast4}`}</span>
+                                                                )}
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                }
+
+
+                                <button
+                                    className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-lg font-medium hover:from-rose-600 hover:to-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    type="button"
+                                    disabled={loading || !userToken}
+                                    onClick={() => {
+                                        if (!userToken) {
+                                            toast.error('Please login to continue');
+                                            return;
                                         }
-                                    </select>
-                                </div>
-                                {Onelisting.currentBooking.find(
-                                    booking =>
-                                        new Date(booking.bookingDuration.from) <= new Date(to) &&
-                                        new Date(booking.bookingDuration.to) >= new Date(from)
-                                ) ? Onelisting.isBook === userData?._id ? (
-                                    // 🟩 If current user already booked it
-                                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                                        <h2 className="text-xl font-semibold text-green-700">
-                                            You have already booked this place
-                                        </h2>
-                                    </div>
-                                ) : (
+                                        paymentRazorpay();
+                                    }}
+                                >
+                                    {loading ? 'Processing...' : userToken ? 'Proceed to Payment' : 'Please Login to Book'}
+                                </button>
 
-                                    // 🟥 If overlap found → show "already booked"
-                                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                                        <h2 className="text-xl font-semibold text-gray-900">
-                                            This property is already booked for the selected dates
-                                        </h2>
-                                        <p className="text-gray-600 mt-2">
-                                            Please try different dates or check our other listings.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    // 🟦 Otherwise, show Payment button
-                                    <button
-                                        className="w-full bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-lg font-medium hover:from-rose-600 hover:to-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        type="button"
-                                        disabled={isLoading || !userToken}
-                                        onClick={() => {
-                                            if (!userToken) {
-                                                toast.error('Please login to continue');
-                                                return;
-                                            }
-                                            paymentRazorpay();
-                                        }}
-                                    >
-                                        {isLoading ? 'Processing...' : userToken ? 'Proceed to Payment' : 'Please Login to Book'}
-                                    </button>
-                                )}
 
                                 <p className="text-center text-sm text-gray-500 mt-4">Secure payment powered by Razorpay</p>
 
@@ -567,7 +802,9 @@ function SingleListing() {
                         <p className="text-gray-600">Share your experience with other travelers</p>
                         <label htmlFor="rating">Rating</label>
                         <div className="flex items-center space-x-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
+                            {[1, 2, 3, 4, 5].map((star
+
+                            ) => (
                                 <button
                                     key={star}
                                     type="button"
@@ -617,20 +854,20 @@ function SingleListing() {
                 <h2 className="text-2xl font-semibold mb-6">Reviews</h2>
                 {allReview.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {allReview.map((review) => (
-                            <div key={review._id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+                        {allReview.map((review, i) => (
+                            <div key={i} className="group relative bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
                                 <div className="flex items-start space-x-4">
                                     <div className="flex-shrink-0">
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-r from-rose-400 to-rose-600 flex items-center justify-center">
                                             <span className="text-white font-medium">
-                                                {review.ownerName?.charAt(0).toUpperCase() || 'U'}
+                                                {review.user.name?.charAt(0).toUpperCase() || 'U'}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="text-lg font-medium text-gray-900 truncate">
-                                                {review.ownerName ? review.ownerName : 'Anonymous'}
+                                                {review.user.name ? review.user.name : 'Anonymous'}
                                             </h3>
                                             <div className="flex items-center">
                                                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
@@ -649,25 +886,23 @@ function SingleListing() {
                                             </time>
                                         </div>
                                     </div>
-                                    <div className="relative">
-                                        {userData && userData._id === review.onwer && (
-                                            <div className="group">
-                                                <button className=" hidden group-hover:block absolute hover:bg-gray-100 rounded-full p-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                                    </svg>
+                                    {userData?.id === review.user.id && (
+                                        <div className="absolute top-4 right-4">
+                                            <button className="invisible group-hover:visible bg-white shadow border border-gray-200 rounded-full p-1 hover:bg-gray-100 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                                </svg>
+                                            </button>
+                                            <div className="invisible group-hover:visible absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                                                <button
+                                                    onClick={() => deleteReview(review.id)}
+                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                                                >
+                                                    Delete Review
                                                 </button>
-                                                <div className="hidden group-hover:block absolute right-0  w-32 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                                                    <button
-                                                        onClick={() => deleteReview(review._id)}
-                                                        className=" w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
-                                                    >
-                                                        Delete Review
-                                                    </button>
-                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -684,7 +919,7 @@ function SingleListing() {
             {/* load more revies */}
             <div>
                 {
-                    allReview.length <= Onelisting.reviewsCount ?
+                    allReview.length >= 5 && allReview.length <= Onelisting.reviewsCount ?
                         <button
                             className='border-2 border-red-400 p-2 rounded-lg text-white bg-red-300 cursor-pointer '>
                             Load More Reviews

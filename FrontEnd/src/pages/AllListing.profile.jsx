@@ -1,5 +1,5 @@
 
-import   { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import AppContext from '../context/AppContext'
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -11,16 +11,18 @@ import { Home, Plus, RefreshCw } from 'lucide-react';
 
 function AllListingProfile() {
     const { userData, navigate, backendUrl, userToken } = useContext(AppContext);
-    const [allListing, setAllListing]= useState([])
-    console.log("all Listing host by user", allListing)
-    const {  setListing} = useContext(AppContext)
+    const [allListing, setAllListing] = useState([])
+    const { setListing } = useContext(AppContext)
     const [isLoading, setIsLoading] = useState(true);
 
     const getAllListings = async () => {
         try {
             setIsLoading(true);
+            if (userData.totalPublicListings === 0)
+                return;
+
             const { data } = await axios.get(`${backendUrl}/listing/all-listing`, { headers: { authorization: `bearer ${userToken}` } });
-            console.log("all listing host by users", data )
+
             if (data.success) {
                 setAllListing(data.Listings.reverse() || []);
             } else {
@@ -65,8 +67,8 @@ function AllListingProfile() {
                     <p className="text-gray-600">Manage all your property listings</p>
                 </div>
                 <div className="flex gap-2">
-                    <button 
-                        onClick={handleRefresh} 
+                    <button
+                        onClick={handleRefresh}
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                         title="Refresh listings"
                     >
@@ -74,12 +76,12 @@ function AllListingProfile() {
                     </button>
                 </div>
             </div>
-            
+
             {allListing && allListing.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 mb-6">
                     {allListing.map((listing, i) => (
                         <ListingCardProfile userData={userData} listing={listing} key={i}
-                        onClick={()=> setListing(listing)} />
+                            onClick={() => setListing(listing)} />
                     ))}
                 </div>
             ) : (
@@ -91,10 +93,10 @@ function AllListingProfile() {
                     <p className="text-gray-600 mb-6">You haven&apos;t created any listings yet. Start hosting by adding your first property.</p>
                 </div>
             )}
-            
+
             <div className="flex justify-center mt-4">
-                <button 
-                    onClick={() => navigate("/become-a-host")} 
+                <button
+                    onClick={() => navigate("/become-a-host")}
                     className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                     <Plus className="w-5 h-5" />

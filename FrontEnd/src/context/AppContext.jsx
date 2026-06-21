@@ -30,8 +30,7 @@ export const AppContextProvider = (props) => {
     const [logoutFormShow, setLogoutFormShow] = useState(false)
 
     const [listing, setListing] = useState(null);
-    
-    console.log("listing in appcontext", listing)
+
 
     const [editListing, setEditListing] = useState(null);
     const [Onelisting, setOneListing] = useState(null);
@@ -47,12 +46,17 @@ export const AppContextProvider = (props) => {
 
     const [allReview, setAllReviews] = useState([])
 
+
+    const [listingBookingDetails, setListingBookingDetails] = useState([])
+
+    const [currDashboard, setCurrDashboard] = useState(0);
+
     //fetching all listing 
     const allData = async () => {
         setHomePageLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/`)
-                setListings(data.Listings)
+            setListings(data.Listings)
         } catch (err) {
             console.log(err)
         } finally {
@@ -60,7 +64,7 @@ export const AppContextProvider = (props) => {
         }
     }
     useEffect(() => {
-            allData()
+        allData()
     }, [])
 
     //filtering listing 
@@ -94,7 +98,7 @@ export const AppContextProvider = (props) => {
             if (userData)
                 return
             const { data } = await axios.get(`${backendUrl}/auth/getData`, { headers: { authorization: `bearer ${userToken}` } })
-            console.log("user Data is ", data )
+
             if (data.success) {
                 setUserData(data.user);
             } else {
@@ -105,28 +109,60 @@ export const AppContextProvider = (props) => {
         }
     }
 
+    const normalizeListingData = (listing) => {
+        if (!listing) return listing;
+
+        const normalized = { ...listing };
+
+        if (normalized.address && typeof normalized.address === "string") {
+            try {
+                normalized.address = JSON.parse(normalized.address);
+            } catch (err) {
+                normalized.address = {};
+
+            }
+        }
+
+        if (!normalized.address || typeof normalized.address !== "object") {
+            normalized.address = {};
+        }
+
+        return normalized;
+    };
+
     //getting the data of one listing 
-    const GetListingData = async (id) => {
+    const GetListingData = async (id, booking = false) => {
+        console.log(" booking values ", booking)
         setIsLoading(true);
         try {
-            const { data } = await axios.get(`${backendUrl}/listing/${id}`)
-
-            if (data.success) {
-                let getlisting = data.listing.listing
-                let Lreviews = data.listing.reviews
-                console.log("listing getting",getlisting)
-                console.log( "reviews getting ",Lreviews )
-                setOneListing(getlisting);
-                if (getlisting && getlisting.image && getlisting.image.length > 0) {
-                    setCurrentImage(getlisting.image[0].url);
+            const { data } = await axios.get(`${backendUrl}/listing/${id}`, {
+                params: {
+                    booking
                 }
-                setAllReviews(Lreviews.reverse())
-                setPrice(getlisting.price)
+            })
+            console.log("Listing data for getting ", data)
+            if (data.success) {
+
+                let bookingd = data.response.bookings
+                if (bookingd.length > 0)
+                    setListingBookingDetails(bookingd)
+                let listingData = normalizeListingData(data.response.listing);
+                let reviewsData = data.response.reviews;
+                setOneListing(listingData);
+                setEditListing(listingData);
+                setListing(listingData);
+                if (listingData && listingData.image && listingData.image.length > 0) {
+                    setCurrentImage(listingData.image[0].url);
+                }
+                if (reviewsData.length > 0)
+                    setAllReviews(reviewsData.reverse())
+                setPrice(listingData.price)
             } else {
                 toast.error(data.message);
             }
 
         } catch (err) {
+            console.log(err)
             toast.error(err.message);
         } finally {
             setIsLoading(false);
@@ -171,7 +207,9 @@ export const AppContextProvider = (props) => {
         comment, setComment,
         reviewSubLoading, setReviewSubLoading,
         allReview, setAllReviews,
-        GetListingData
+        GetListingData, getUserdata,
+        currDashboard, setCurrDashboard,
+        listingBookingDetails, setListingBookingDetails
     }
 
     return (

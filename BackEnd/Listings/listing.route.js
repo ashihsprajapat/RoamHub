@@ -26,7 +26,8 @@ Router.route("/all-listing")
 )
     
 
-Router.route("/:id/")   // caching 
+Router.route("/:id")   // caching 
+    .get(getListingById)  // get listing by id 
 
     .put(protectListing,
         verifyEmail, 
@@ -36,9 +37,6 @@ Router.route("/:id/")   // caching
     .delete( protectListing,
         verifyEmail,  
         deleteListing)     // delete listing by id 
-
-    .get(getListingById)                                     // get listing by id 
-
 
 Router.route("/image/:id")
         .delete(protectListing,

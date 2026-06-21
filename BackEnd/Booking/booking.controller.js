@@ -7,8 +7,6 @@ import { prisma } from "../lib/prisma.js";
 
 export const createBooking = async (req, res) => {
     try {
-       
-
     } catch (err) {
         return res.status(500).json({
             success: false,
@@ -62,7 +60,28 @@ export const cancelBooking = async (req, res) => {
 export const getAllBookingByUser= async(req, res)=>{
     try {
         const {user}= req
-        const bookings= await Booking.find({guest: user._id}).populate("listing")
+        //const bookings= await Booking.find({guest: user._id}).populate("listing")
+
+        const bookings = await prisma.booking.findMany({
+            where: {
+            ownerId: req.user.id,
+            },
+            include: {
+            transaction: true, // transaction details
+            guests: true, // all guests
+            user: { // optional user info
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    
+                }}
+            },
+
+            orderBy: {
+            from: "asc"
+            }
+        })
 
         res.json({success:true, message:"All bookings", bookings})
 
@@ -73,16 +92,29 @@ export const getAllBookingByUser= async(req, res)=>{
 }
 
 export const getAllBookingsOfListing= async(req, res )=>{
-    console.log("req is comming for booking")
     const listingId = req.params.id;
     try {
         const bookings=  await prisma.booking.findMany({
             where : {
                 listingId
+            },
+            include:{
+                transaction: {
+                    select:{
+                        id:true,
+                        paymentStatus:true,
+                        totalAmount: true
+                    }
+                },
+                user: {
+                    select:{
+                        name:true,
+                        email:true
+                    }
+                }
             }
         })
-        console.log("All Booking of this listing ",bookings)
-        res.status(200).json({bookings})
+        res.status(200).json({ success: true,  bookings})
     } catch (error) {
         console.log(error.message)
         res.status(500).json({message:error.message})  }

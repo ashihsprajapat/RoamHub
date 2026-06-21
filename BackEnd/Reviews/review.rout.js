@@ -9,7 +9,7 @@ Router.route("/:id")
 .post(  createReview)
 
 Router.route("/:Lid/:Rid")
-.delete(   deleteRevie)
+    .delete(   deleteRevie)
 
 export default Router;
 

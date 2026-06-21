@@ -41,30 +41,31 @@ export interface User {
 }
 
 interface ListingCardProfileProps {
-  userData: User;
-  listing: Listing;
+    userData: User;
+    listing: Listing;
 }
 
 import { useContext } from 'react';
 import AppContext from '../context/AppContext'
 import { MapPin, IndianRupee, Calendar, Eye, Edit, ArrowRight } from 'lucide-react';
 
-function ListingCardProfile({ userData, listing } : ListingCardProfileProps) {
-    const { navigate } = useContext<any>(AppContext);
+function ListingCardProfile({ userData, listing }: ListingCardProfileProps) {
+    const { navigate, setListing } = useContext<any>(AppContext);
 
 
     const handleViewListing = () => {
+        setListing(listing)
         navigate(`/profile/${userData.id}/${listing._id}`);
     };
 
     const handleEditListing = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
-        navigate(`/${listing._id}/edit`);
+        navigate(`/edit/${listing._id}`);
     };
 
     const handleViewPublic = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
-        navigate(`/${listing._id}`, );
+        navigate(`/${listing._id}`,);
     };
 
     return (
@@ -109,8 +110,8 @@ function ListingCardProfile({ userData, listing } : ListingCardProfileProps) {
                     </p>
 
                     <div className='mt-auto flex flex-wrap gap-3 text-sm'>
-                    
-                        <div className={` ${listing.isBook ? " text-red-500 ":"" } flex items-center gap-1 text-gray-500'`}>
+
+                        <div className={` ${listing.isBook ? " text-red-500 " : ""} flex items-center gap-1 text-gray-500'`}>
                             <Calendar className='w-4 h-4' />
                             <span
                             >{!listing.isBook ? 'Available' : 'Unavailable'}</span>

@@ -1,5 +1,5 @@
 import './App.css'
-import {  Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/home';
 import Footer from './components/Footer';
@@ -31,7 +31,7 @@ function App() {
         !current.pathname.includes("profile") && <Navbar />
       }
 
-      
+
 
       <Routes>
 
@@ -55,9 +55,11 @@ function App() {
           <Route path=":list_id" element={<OneListingProfile />} />
         </Route>
 
+        <Route path="/edit/:id" element={<EditListing />} />
+
         <Route path="/:id" element={<SingleListing />} />
 
-        <Route path="/:id/edit" element={<EditListing />} />
+
       </Routes>
 
       <Toaster

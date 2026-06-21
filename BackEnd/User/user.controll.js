@@ -108,10 +108,9 @@ export const otpsend= async(req, res)=>{
 export const verifyEmail= async(req,res)=>{
     try{
         const {otp}= req.body;
-         if(!otp  )
+        if(!otp  )
             return res.json({success:false, message:"Please give me otp"})
 
-       
         let user = req.user;
 
         
@@ -119,19 +118,18 @@ export const verifyEmail= async(req,res)=>{
         if(!val)
             return res.status(200).json({message:"Otp is expire", success: false})
         
-        if(JSON.parse(val) !== otp)
+
+        if(JSON.parse(val) !== JSON.parse(otp))
             return res.json({message:"Wrong Otp", success:false})
         
         
-        await prisma.user.update({
+        user = await prisma.user.update({
             where:{email:user.email} ,
             data:{
                 verify : true
             }
         });
         
-        
-        user.verify=true;
 
         await client.set(`token:${user.id}`, JSON.stringify(user),{EX:20*60}) // 20 minit
 

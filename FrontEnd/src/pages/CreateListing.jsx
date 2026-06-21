@@ -50,7 +50,7 @@ function CreateListing() {
         state: null,
         pinConde: null,
     })
-    
+
     const handleAddress = (e) => {
         e.preventDefault();
         setAddress(prev => (
@@ -95,8 +95,6 @@ function CreateListing() {
         if (currentState === 9) {
 
 
-
-
             try {
                 setIsLoading(true)
                 const formData = new FormData();
@@ -112,7 +110,6 @@ function CreateListing() {
                 });
 
                 const { data } = await axios.post(`${backendUrl}/listing`,
-                    // title,image, description, address,guestType, category,location
 
                     formData, {
                     headers: {
@@ -120,7 +117,6 @@ function CreateListing() {
                         authorization: `Bearer ${userToken}`
                     }
                 })
-                console.log("After creating listing resonse ", data)
                 setIsLoading(false)
 
                 if (data.success) {

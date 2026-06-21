@@ -22,14 +22,6 @@ const listingSchema = new Schema({
     },
     category: { type: String },
     description: { type: String, required: true },
-    isBook: {
-        type:Boolean  ,
-        default: false,
-    },
-    currentBooking: [{
-        type:String ,
-        default : null
-    }],
 
 
     price: { type: Number, required:true },

@@ -6,7 +6,7 @@ import client from '../config/Redis.js';
 
 //create a review for a listing
 export const createReview = async (req, res) => {
-
+    console.log("req is comming for creating reviews")
     const { rating, comment } = req.body;
     if(!rating || !comment)
         return res.status(400).json({message:"missing Details"})
@@ -22,10 +22,6 @@ export const createReview = async (req, res) => {
         if (!listing)
             return res.status(404).json({ success: false });
 
-        // const newReview = new Review({
-        //     rating, comment, onwer: user._id,
-        //     ownerName: user.name
-        // })
         const newReview = await prisma.review.create({
             data:{
                 rating,
@@ -34,11 +30,20 @@ export const createReview = async (req, res) => {
                 listingId : id
             }
         })
-        listing.reviewsCount ++;
-
-        await listing.save();
+        listing = await Listing.findByIdAndUpdate(id, {
+            $inc:{
+                reviewsCount : 1
+            }
+        })
+        newReview.user={
+            name: user.name,
+            email : user.email,
+            id : user.id
+        }
+        await client.set(`Listing:${id}`, JSON.stringify(listing), {EX : 5 * 60})
         res.status(201).json({ success: true, newReview,  message: "review is create" })
     } catch (err) {
+        console.log(err)
         res.status(500).json({ success: false, message: err.message })
     }
 }
@@ -46,7 +51,7 @@ export const createReview = async (req, res) => {
 
 //delte a revie for a listing
 export const deleteRevie = async (req, res) => {
-    
+    console.log("delete req comming")
     const { Lid, Rid } = req.params;
 
     const user = req.user;
@@ -59,7 +64,6 @@ export const deleteRevie = async (req, res) => {
                 listingId : Lid
             }
         })
-        console.log("deleted Reviews is ", deleteRev)
         if(!deleteRev)
             return res.status(400).json({message:'reviews not found'})
         
@@ -68,11 +72,11 @@ export const deleteRevie = async (req, res) => {
                 reviewsCount : -1
             }
             
-        },{
-                new:true
-            })
+        })
+
+        console.log("listing decrease", listing)
         
-       // await client.set(`Listing:${Lid}`, Listing)
+        await client.set(`Listing:${listing._id}`, JSON.stringify(listing),{EX : 5 * 60})
         res.json({ success: true, message: "review is deleted", deleteRev })
 
     } catch (err) {

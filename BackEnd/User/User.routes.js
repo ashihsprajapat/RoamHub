@@ -19,6 +19,7 @@ Router.route("/getData")
     .get(protectListing, getUserData)
 
 Router.post("/sendOTP", protectListing, otpsend)
+
 Router.post("/verifyOtp", protectListing, verifyEmail)
 
 

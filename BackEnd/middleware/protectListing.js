@@ -11,9 +11,8 @@ export const protectListing = async (req, res, next) => {
     const {authorization} = req.headers
 
     if(!authorization){
-        console.log("token not in headers3")
             return res.status(400).json({message:"Token is required"})
-}
+    }
     const token = authorization.substring(7);
     
     if (!token) {
@@ -31,7 +30,6 @@ export const protectListing = async (req, res, next) => {
             req.user= JSON.parse(cachedUser)
             return next();
         }
-        
         const user = await prisma.user.findUnique({where : {id : decode.id}})
         if (!user) {
             return res.json({ success: false, message: "User not found" });

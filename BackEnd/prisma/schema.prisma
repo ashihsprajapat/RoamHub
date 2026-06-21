@@ -24,14 +24,20 @@ model User {
   phoneOtp            String?
   phoneValidTime      DateTime?
   bookings    Booking[]
+
+  reviews Review[]
 }
 
 model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String   @db.VarChar(500)
-  userId    String
+  
   listingId String
+
+  userId    String
+  user User @relation( fields:[userId], references:[id]  )
+
   createdAt DateTime @default(now())
 }
 
@@ -80,6 +86,11 @@ model Booking {
 
   TotalNights Int
   pernightCharge Int
+
+  listingTitle String @default("")
+  listingAddress String @default("")
+  listingImage String @default("")
+
 }
 
 enum PaymentStatus {

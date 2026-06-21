@@ -1,5 +1,5 @@
 
-import   { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import AppContext from '../context/AppContext';
 import axios from 'axios';
 import HomePageSkeleton from '../components/skeletons/HomePageSkeleton';
@@ -16,7 +16,6 @@ function AllListing() {
         setHomePageLoading(true);
         try {
             const { data } = await axios.get(`${backendUrl}/listing/`)
-            console.log("loading all listing host by user ",data)
             setListings(data.Listings)
         } catch (err) {
             console.log(err)
@@ -26,7 +25,6 @@ function AllListing() {
 
     }
     useEffect(() => {
-        console.log("Calling to fetch all datas ")
         allData()
     }, [])
 
