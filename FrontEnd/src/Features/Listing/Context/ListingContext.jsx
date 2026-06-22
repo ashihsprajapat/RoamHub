@@ -137,7 +137,6 @@ export const ListingProvider = ({ children }) => {
     const EditListingFunction = async (id, formData) => {
         try {
             setIsLoading(true);
-            // setIsLoading(true)
 
             const { data } = await editListingService(id, formData, userToken)
             console.log("data after edit listing", data)

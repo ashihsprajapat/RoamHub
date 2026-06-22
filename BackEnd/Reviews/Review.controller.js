@@ -6,13 +6,7 @@ import client from '../config/Redis.js';
 
 //create a review for a listing
 export const createReview = async (req, res) => {
-    console.log("req is comming for creating reviews")
     const { rating, comment } = req.body;
-    if(!rating || !comment)
-        return res.status(400).json({message:"missing Details"})
-
-    if(rating<0 || rating > 5 || comment.length < 2 )
-        return res.status(400).json({message:"wrong detils"})
 
     const user = req.user;
 
@@ -51,7 +45,6 @@ export const createReview = async (req, res) => {
 
 //delte a revie for a listing
 export const deleteRevie = async (req, res) => {
-    console.log("delete req comming")
     const { Lid, Rid } = req.params;
 
     const user = req.user;
@@ -73,8 +66,6 @@ export const deleteRevie = async (req, res) => {
             }
             
         })
-
-        console.log("listing decrease", listing)
         
         await client.set(`Listing:${listing._id}`, JSON.stringify(listing),{EX : 5 * 60})
         res.json({ success: true, message: "review is deleted", deleteRev })

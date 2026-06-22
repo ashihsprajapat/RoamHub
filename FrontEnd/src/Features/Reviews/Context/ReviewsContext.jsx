@@ -18,7 +18,6 @@ export const ReviewProvider = ({ children }) => {
 
 
     const createReview = async (id, e) => {
-        console.log("review created")
         e.preventDefault();
         if (!rating || !comment) {
             toast.error("Please provide both rating and comment");
@@ -42,7 +41,7 @@ export const ReviewProvider = ({ children }) => {
 
 
         } catch (err) {
-            toast.error(err.message)
+            toast.error(err.response.data.errors[0].message)
         } finally {
             setReviewSubLoading(false);
         }
@@ -58,7 +57,6 @@ export const ReviewProvider = ({ children }) => {
                 toast.error("something went wrong")
             }
             const { data } = await deleteReviewApi(id, Rid, userToken);
-            console.log("data after delet review", data)
             if (data.success) {
                 toast.success("Review deleted successfully")
                 setAllReviews(allReview => (

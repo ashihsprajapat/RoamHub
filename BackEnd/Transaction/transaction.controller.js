@@ -15,10 +15,7 @@ const razorpayInstance = new Razorpay({
 export const paymnetRazorPay = async (req, res) => {
     try {
         const { totalAmount, paymentType, from, to } = req.body;
-        if( !from || !to || !totalAmount || !paymentType  ){
-                return res.status(400).json({ success :false,  message:"missing details"})}
-        if(totalAmount === 0)
-                return res.status(400).json({success:false, message:"Please check Amount"})
+        
         const {user} = req;
         const { id: listingId } = req.params;
 
@@ -90,13 +87,7 @@ export const verifyRazorpay = async (req, res, next) => {
     try {
         const { razorpay_order_id, from , to , totalAmount, TotalNights, pernightCharge , guests } = req.body;
         
-        if( !totalAmount || !from || !to || !TotalNights || !pernightCharge || !guests)
-                return res.status(400).json({message:"Missing details"})
-        if(totalAmount <=0)
-            return res.status(400).json({message:"please selecte date   "})
-        if (!razorpay_order_id)
-            return res.json({ success: false, message: "razorpay_order_id is requried" })
-
+        
         const orderinfo = await razorpayInstance.orders.fetch(razorpay_order_id)
 
         if (orderinfo.status === 'paid') {

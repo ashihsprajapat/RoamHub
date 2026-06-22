@@ -6,7 +6,8 @@ import upload from '../config/multer.js';
 import { createListing, deleteListing, getAllListingHostByUser, deleteImageLiting, getAllListings, getListingById,  updateListing } from './listing.controller.js';
 import { protectListing ,verifyEmail} from '../middleware/protectListing.js';
 
-
+import {validate} from '../middleware/Validate.js'
+import { createListingSchema } from './validateListingSchema.js';
 
 Router.route("/")  // caching
     .get(getAllListings)  // get all listing
@@ -15,6 +16,7 @@ Router.route("/")  // caching
         protectListing,
         verifyEmail,
         upload.array("image",8),
+        validate(createListingSchema),
         createListing
     );
 
@@ -27,11 +29,12 @@ Router.route("/all-listing")
     
 
 Router.route("/:id")   // caching 
-    .get(getListingById)  // get listing by id 
+    .get(   getListingById)  // get listing by id 
 
     .put(protectListing,
         verifyEmail, 
         upload.array("image", 4),
+        validate(createListingSchema),
           updateListing) // update listing by id
         
     .delete( protectListing,

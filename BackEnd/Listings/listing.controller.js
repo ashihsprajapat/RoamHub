@@ -87,7 +87,6 @@ export const getListingById = async (req, res) => {
 
 //update listing by id and new data
 export const updateListing = async (req, res) => {
-    console.log("req is comming for update listing")
     const { title, description, price, address, location, country } = req.body;
     
 
@@ -194,7 +193,6 @@ export const deleteListing = async (req, res) => {
 
 //create listing
 export const createListing = async (req, res) => {
-    console.log("come in main Controller function ")
     let  { title,   description, price, address, location, country,  category } = req.body;
     
     
@@ -260,7 +258,6 @@ export const getAllListingHostByUser = async (req, res) => {
     try {
         const user = req.user;
         const id = user.id;
-        console.log("user id is", id)
         // const listing= await client.lRange(`userListing:${_id}`, 0 , -1);
         
         // if(listing.length   > 1){
@@ -284,7 +281,6 @@ export const getAllListingHostByUser = async (req, res) => {
 
 export const deleteImageLiting = async(req,res)=>{
     try{
-        console.log("In delete Listing iamge ")
         const {id}= req.params;
         let listing = await Listing.findById(id);
         if(!listing)
@@ -292,7 +288,6 @@ export const deleteImageLiting = async(req,res)=>{
 
         const user = req.user;
         const {imageRemove}= req.body;
-        console.log("iamge remove is ",imageRemove)
 
         if(!imageRemove)
             return res.status(400).json({message:"ImageRemove is required"})

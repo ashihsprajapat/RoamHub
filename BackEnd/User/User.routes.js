@@ -3,17 +3,19 @@
 import express from 'express';
 import { getUserData, otpsend,  userLogin, userRegister, verifyEmail } from './user.controll.js';
 import { protectListing } from '../middleware/protectListing.js';
+import { userLoginSchema, userRgisterSchema } from './ZodValidator.js';
+import { validate } from '../middleware/Validate.js';
 const Router = express.Router()
 
 
 //register 
 Router.route("/register")
-    .post(userRegister)
+    .post(  validate(userRgisterSchema), userRegister)
 
 
 //user login
 Router.route("/login")
-    .post(userLogin);
+    .post(   validate(userLoginSchema), userLogin);
 
 Router.route("/getData")
     .get(protectListing, getUserData)

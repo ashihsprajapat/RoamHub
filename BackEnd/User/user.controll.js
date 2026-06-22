@@ -15,8 +15,7 @@ export const userRegister = async (req, res) => {
 
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password )
-        return res.json({ success: false, message: "missing details" })
+    
     try {
     
         const user = await prisma.user.findUnique({
@@ -50,9 +49,6 @@ export const userRegister = async (req, res) => {
 export const userLogin = async (req, res) => {
 
     const { email, password } = req.body;
-    if (!email || !password)
-        return res.status(404).json({ success: false, message: "missing details" })
-
 
     try {
         const user = await prisma.user.findUnique({where:{email}})

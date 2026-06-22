@@ -120,7 +120,6 @@ export const BookingProvider = ({ children }) => {
 
     //create a transaction for payment 
     const paymentRazorpay = async (id, SelectedListing) => {
-        console.log("Booking for transaction ")
         try {
             setLoading(true);
             if (guests.length == 0) {
@@ -136,6 +135,7 @@ export const BookingProvider = ({ children }) => {
                 initPay(id, data.order, SelectedListing);
             }
         } catch (error) {
+            console.log(error)
             toast.error(error.response.data.message)
         } finally {
             setLoading(false);

@@ -60,7 +60,6 @@ export const cancelBooking = async (req, res) => {
 export const getAllBookingByUser= async(req, res)=>{
     try {
         const {user}= req
-        //const bookings= await Booking.find({guest: user._id}).populate("listing")
 
         const bookings = await prisma.booking.findMany({
             where: {
