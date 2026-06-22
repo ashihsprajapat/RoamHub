@@ -1,15 +1,15 @@
 
-import  { useContext, useState } from 'react'
-import { assets } from './../assets/assets';
-import AppContext from '../context/AppContext';
-import axios from 'axios'
+import { useContext, useState } from 'react'
+import { assets } from '../../../assets/assets';
+import AppContext from '../../../context/AppContext';
 import toast from 'react-hot-toast';
+import { useAuth } from '../Hooks/useAuth';
 
 
 function Authentication() {
-    const { backendUrl, setUserToken, navigate, state, setState, isLoading, setIsLoading } = useContext(AppContext);
+    const { navigate, isLoading, setIsLoading } = useContext(AppContext);
     // console.log(backendUrl)
-
+    const { setUserToken, state, setState, Authentication } = useAuth()
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -17,68 +17,58 @@ function Authentication() {
 
     const onSubmithandler = async (e) => {
         e.preventDefault();
-        // console.log(name, email, password);
-        //call to backend
 
+        setIsLoading(true);
+        try {
 
-
-
-        if (state === 'Login') {
-
-
-            setIsLoading(true);
-            try {
-
-                const { data } = await axios.post(`${backendUrl}/auth/login`, { email, password })
-            
-                setPassword("");
-
-                if (data.success) {
-                    localStorage.setItem("air_bnb_token", data.token);
-                    navigate("/")
-                    setUserToken(data.token)
-                    toast.success("login successfull")
-                } else {
-                    toast.error(data.message)
-                    setEmail("");
-                }
-
-            } catch (err) {
-                toast.error(err.message);
-
-            } finally {
-                setIsLoading(false);
+            let data = await Authentication(email, password, name);
+            console.log("User data ", data)
+            if (data.success) {
+                localStorage.setItem("air_bnb_token", data.token);
+                navigate("/")
+                setUserToken(data.token)
+                toast.success("login successfull")
+            } else {
+                toast.error(data.message)
+                setEmail("");
             }
 
+        } catch (err) {
+            toast.error(err.message);
 
-
-        } else {
-            setIsLoading(true)
-            try {
-                const { data } = await axios.post(`${backendUrl}/auth/register`, {
-                    name, email, password
-                })
-                if (data.success) {
-                    setName("");
-                    setEmail('');
-                    setPassword("");
-                    localStorage.setItem("air_bnb_token", data.token)
-                    toast.success(data.message);
-                    navigate("/")
-                    setUserToken(data.token)
-                } else {
-                    toast.error(data.message)
-                    setPassword("");
-                    setEmail('');
-                }
-            } catch (err) {
-                toast.error(err.message)
-                setIsLoading(false);
-            } finally {
-                setIsLoading(false)
-            }
+        } finally {
+            setIsLoading(false);
         }
+
     }
+
+
+    //     setIsLoading(true)
+    //     try {
+    //         const { data } = await axios.post(`${backendUrl}/auth/register`, {
+    //             name, email, password
+    //         })
+    //         if (data.success) {
+    //             setName("");
+    //             setEmail('');
+    //             setPassword("");
+    //             localStorage.setItem("air_bnb_token", data.token)
+    //             toast.success(data.message);
+    //             navigate("/")
+    //             setUserToken(data.token)
+    //         } else {
+    //             toast.error(data.message)
+    //             setPassword("");
+    //             setEmail('');
+    //         }
+    //     } catch (err) {
+    //         toast.error(err.message)
+    //         setIsLoading(false);
+    //     } finally {
+    //         setIsLoading(false)
+    //     }
+
+    // }
 
 
     return (
@@ -99,49 +89,49 @@ function Authentication() {
                                     <div className="flex items-center justify-center h-10 w-10 bg-gray-50">
                                         <img className="h-5 w-5" src={assets.person_icon} alt="Person icon" />
                                     </div>
-                                    <input 
+                                    <input
                                         id="name"
-                                        name="name" 
-                                        type="text" 
-                                        required 
-                                        className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm" 
+                                        name="name"
+                                        type="text"
+                                        required
+                                        className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
                                         placeholder="Enter your name"
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </label>
                             </div>
                         )}
-                        
+
                         <div className="relative">
                             <label htmlFor="email" className="flex items-center border border-gray-300 rounded-full overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all duration-200">
                                 <div className="flex items-center justify-center h-10 w-10 bg-gray-50">
                                     <img className="h-5 w-5" src={assets.email_icon} alt="Email icon" />
                                 </div>
-                                <input 
+                                <input
                                     id="email"
-                                    name="email" 
-                                    type="email" 
-                                    autoComplete="email" 
-                                    required 
-                                    className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm" 
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
                                     placeholder="Email address"
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </label>
                         </div>
-                        
+
                         <div className="relative">
                             <label htmlFor="password" className="flex items-center border border-gray-300 rounded-full overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all duration-200">
                                 <div className="flex items-center justify-center h-10 w-10 bg-gray-50">
                                     <img className="h-5 w-5" src={assets.lockicon} alt="Lock icon" />
                                 </div>
-                                <input 
+                                <input
                                     id="password"
-                                    name="password" 
-                                    type="password" 
-                                    autoComplete="current-password" 
-                                    required 
-                                    className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm" 
+                                    name="password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    required
+                                    className="block w-full px-3 py-2 border-0 outline-none text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -149,11 +139,11 @@ function Authentication() {
                             </label>
                         </div>
                     </div>
-                    
+
                     <div>
-                        <button 
-                            type="submit" 
-                            disabled={isLoading} 
+                        <button
+                            type="submit"
+                            disabled={isLoading}
                             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-full text-white bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200"
                         >
                             {isLoading ? (
@@ -166,7 +156,7 @@ function Authentication() {
                             )}
                         </button>
                     </div>
-                    
+
                     {state === 'Login' && (
                         <div className="text-sm text-center">
                             <a href="#" className="font-medium text-primary hover:text-primary-focus">
@@ -175,12 +165,12 @@ function Authentication() {
                         </div>
                     )}
                 </form>
-                
+
                 <div className="mt-6 text-center text-sm">
                     {state === 'Login' ? (
                         <p className="text-gray-600">
                             Don&apos;t have an account?{' '}
-                            <button 
+                            <button
                                 type="button"
                                 className="font-medium text-primary hover:text-primary-focus transition-colors duration-200"
                                 onClick={() => setState('SignUp')}
@@ -191,7 +181,7 @@ function Authentication() {
                     ) : (
                         <p className="text-gray-600">
                             Already have an account?{' '}
-                            <button 
+                            <button
                                 type="button"
                                 className="font-medium text-primary hover:text-primary-focus transition-colors duration-200"
                                 onClick={() => setState('Login')}

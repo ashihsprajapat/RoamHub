@@ -1,70 +1,44 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import AppContext from "../context/AppContext";
-import { toast } from "react-toastify";
-import axios from "axios";
 import { ChevronLeft, ChevronRight, MapPin, DollarSign, Users, Tag } from "lucide-react";
+import { useAuth } from "../../Auth/Hooks/useAuth";
+import { useListing } from "../Hooks/UseListing";
 
 function EditListing() {
-    const { backendUrl, userToken, editListing, setEditListing, GetListingData, navigate, setOneListing, isLoading, userData } = useContext(AppContext);
+
+    const { navigate, userData } = useAuth()
+
+    const { editListing, setEditListing, GetListingData, isLoading, listingLoad, EditListingFunction } = useListing();
+
     const { id } = useParams();
-    const [loading, setLoading] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    console.log("editlisting", editListing)
     useEffect(() => {
         if (id && !editListing)
             GetListingData(id);
     }, [id]);
 
-    // if (editListing && editListing.address)
-    //     editListing.address = JSON.parse(editListing.address)
 
 
-    // Handle category selection
-    const handleCategory = (e) => {
-        setCategory(e.target.textContent);
-    }
 
 
 
     const SaveListingDetails = async () => {
-        try {
-            const formData = new FormData();
 
-            Object.entries(editListing).forEach(([key, value]) => {
-                if (value === undefined || value === null) return;
+        const formData = new FormData();
 
-                if (typeof value === "object" && !(value instanceof File)) {
-                    formData.append(key, JSON.stringify(value));
-                } else {
-                    formData.append(key, value);
-                }
-            });
-            setLoading(true)
+        Object.entries(editListing).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
 
-            const { data } = await axios.put(`${backendUrl}/listing/${id}`,
-                formData,
-                {
-                    headers: {
-                        authorization: `Bearer ${userToken}`,
-                    },
-                }
-            );
-
-            if (data.success) {
-                toast.success("Listing updated successfully");
-                setOneListing(data.updateListing)
-                navigate(`/profile/${userData.id}/${id}`)
+            if (typeof value === "object" && !(value instanceof File)) {
+                formData.append(key, JSON.stringify(value));
             } else {
-                toast.error(data.message);
+                formData.append(key, value);
             }
-        } catch (err) {
-            console.log(err)
-            toast.error(err.message || "Update failed");
-        } finally {
-            setLoading(false)
-        }
+        });
+
+        EditListingFunction(id, formData);
+
     };
 
     const handleImageNavigation = (direction) => {
@@ -87,7 +61,7 @@ function EditListing() {
         }))
     };
 
-    if (isLoading || !editListing) {
+    if (listingLoad || !editListing) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
                 <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -478,11 +452,11 @@ function EditListing() {
                                 Cancel
                             </button>
                             <button
-                                disabled={loading}
+                                disabled={isLoading}
                                 onClick={SaveListingDetails}
                                 className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-indigo-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                             >
-                                {loading ? (
+                                {isLoading ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                         Saving...

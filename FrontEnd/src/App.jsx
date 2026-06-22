@@ -1,24 +1,22 @@
 import './App.css'
 import { Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Home from './pages/home';
-import Footer from './components/Footer';
-import SingleListing from './pages/SingleListing';
-import Authentication from './pages/Authentication';
-import EditListing from './pages/EditListing';
-import CreateListing from './pages/CreateListing';
-import ProfileShow from './pages/profilesShow';
+import Home from './Features/Listing/Pages/home';
+import ProfileShow from './Features/Profile/Pages/profilesShow';
 import HostPage from './pages/HostPage';
-import AllListingProfile from './pages/AllListing.profile';
-import OneListingProfile from './pages/oneListingProfile';
-import AllBookingListingProfile from './pages/AllBookingListingProfile';
 
 import { Toaster } from 'react-hot-toast';
-import AllListing from './pages/AllListing';
 import { useLocation } from 'react-router-dom'
-import Success from './components/Success';
-import Cancell from './components/Cancell';
-import VerifyEmail from './pages/VerifyEmail';
+import Navbar from './components/Common/Navbar';
+import Footer from './components/Common/Footer';
+import VerifyEmail from './Features/Auth/Pages/VerifyEmail';
+import Authentication from './Features/Auth/Pages/Authentication';
+import CreateListing from './Features/Listing/Pages/CreateListing';
+import AllListing from './Features/Listing/Pages/AllListing';
+import AllListingProfile from './Features/Listing/Pages/AllListing.profile';
+import EditListing from './Features/Listing/Pages/EditListing';
+import AllBookingListingProfile from './Features/Booking/Page/AllBookingListingProfile';
+import SelectedListing from './Features/Listing/Pages/SelectedListing';
+import SelectListingDashboard from './Features/Listing/Pages/SelectListingDashboard';
 
 function App() {
 
@@ -40,8 +38,7 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth" element={<Authentication />} />
 
-        <Route path="/success" element={<Success />} />
-        <Route path="/cancell" element={<Cancell />} />
+
 
         <Route path="/become-a-host" element={< CreateListing />} />
 
@@ -52,12 +49,12 @@ function App() {
         <Route path="/profile/:id" element={<ProfileShow />} >
           <Route path="all-listings" element={<AllListingProfile />} />
           <Route path="all-booking" element={<AllBookingListingProfile />} />
-          <Route path=":list_id" element={<OneListingProfile />} />
+          <Route path=":list_id" element={<SelectListingDashboard />} />
         </Route>
 
         <Route path="/edit/:id" element={<EditListing />} />
 
-        <Route path="/:id" element={<SingleListing />} />
+        <Route path="/:id" element={<SelectedListing />} />
 
 
       </Routes>

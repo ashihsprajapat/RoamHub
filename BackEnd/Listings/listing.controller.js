@@ -53,7 +53,7 @@ export const getListingById = async (req, res) => {
             orderBy :{
                 rating:'desc'
             },
-            take : Math.min(5, listing.reviewsCount)
+            take : 5
         })
 
         let bookings= null;

@@ -1,14 +1,17 @@
 import { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import AppContext from '../context/AppContext';
-import { assets } from './../assets/assets';
+import AppContext from '../../context/AppContext';
+import { assets } from '../../assets/assets';
+import { useAuth } from '../../Features/Auth/Hooks/useAuth';
 
 function Navbar() {
     const [open, setOpen] = useState(false);
 
-    const { navigate, userData, setMenuBarShow, setState } =
+    const { navigate, setMenuBarShow, } =
         useContext(AppContext);
+
+    const { userData, setState } = useAuth()
 
     return (
         <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-2 border-b border-gray-300 bg-white relative">
@@ -37,8 +40,8 @@ function Navbar() {
                 {
                     userData?.verify ?
                         <NavLink to="/host/homes">Air bnb Your Home</NavLink>
-                        :(userData && 
-                        <NavLink className={`text-red-500 border border-gray-600 bg-gray-300 px-7 rounded-3xl font-semibold cursor-pointer hover:bg-gray-200 py-1
+                        : (userData &&
+                            <NavLink className={`text-red-500 border border-gray-600 bg-gray-300 px-7 rounded-3xl font-semibold cursor-pointer hover:bg-gray-200 py-1
                         `} to="/verify-email">Verify Email</NavLink>)
                 }
 

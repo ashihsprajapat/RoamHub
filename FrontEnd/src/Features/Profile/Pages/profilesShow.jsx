@@ -1,15 +1,20 @@
 
-import { useContext, useState, useEffect } from 'react'
-import { Outlet, useLocation, useParams, NavLink, useNavigate } from 'react-router-dom'
-import { assets } from './../assets/assets';
-import AppContext from './../context/AppContext';
+import { useContext, useEffect } from 'react'
+import { Outlet, useLocation, useParams, NavLink } from 'react-router-dom'
+import { assets } from '../../../assets/assets';
+import AppContext from '../../../context/AppContext';
 import { Home, List, Calendar, LogOut, User } from 'lucide-react';
+import { useAuth } from '../../Auth/Hooks/useAuth';
 
 function ProfileShow() {
-    const navigate = useNavigate();
+
     const location = useLocation();
+
     const { id } = useParams();
-    const { userData, setUserData, setUserToken, getUserdata, currDashboard, setCurrDashboard } = useContext(AppContext);
+
+    const { navigate } = useContext(AppContext);
+
+    const { userData, setUserData, setUserToken, getUserData, currDashboard, setCurrDashboard } = useAuth()
 
     // Set active tab based on current path
     useEffect(() => {
@@ -25,7 +30,7 @@ function ProfileShow() {
 
     useEffect(() => {
         if (!userData) {
-            getUserdata()
+            getUserData()
         }
 
     }, [id])

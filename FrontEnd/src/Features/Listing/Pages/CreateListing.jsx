@@ -14,10 +14,10 @@ import BalconyIcon from '@mui/icons-material/Balcony';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
 
-import AppContext from '../context/AppContext';
 import axios from 'axios';
 import { ArrowLeft, ArrowRight, Check, Home, MapPin, Upload, Image, PenSquare, IndianRupee } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AppContext from '../../../context/AppContext';
 
 function CreateListing() {
     const { backendUrl, userToken, navigate, setListings, userData, setUserData } = useContext(AppContext);

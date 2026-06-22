@@ -1,8 +1,8 @@
 
-import { useContext,  } from "react";
-import AppContext from "../context/AppContext";
-import LisitngCard from "../components/LisitngCard";
-import HomePageSkeleton from './../components/skeletons/HomePageSkeleton';
+import { useContext, } from "react";
+import AppContext from "../../../context/AppContext";
+import LisitngCard from "../../../components/LisitngCard";
+import HomePageSkeleton from '../../../components/skeletons/HomePageSkeleton';
 import { Search, Home as HomeIcon, Smartphone } from 'lucide-react';
 import FortIcon from '@mui/icons-material/Fort';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -12,12 +12,13 @@ import SailingIcon from '@mui/icons-material/Sailing';
 import GiteIcon from '@mui/icons-material/Gite';
 import AirportShuttleIcon from '@mui/icons-material/AirportShuttle';
 import BalconyIcon from '@mui/icons-material/Balcony';
+import { useListing } from '../Hooks/UseListing';
 
 function Home() {
-    const { isHomePageLoading,  filteredListings,
-        
+    const { isHomePageLoading, filteredListings,
+
         searchQuery, setSearchQuery,
-        activeCategory, setActiveCategory } = useContext(AppContext);
+        activeCategory, setActiveCategory } = useListing();
 
     const categories = [
         { name: 'All', },

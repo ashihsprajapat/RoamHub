@@ -1,6 +1,5 @@
 
 import { useContext, useEffect, useState } from 'react'
-import AppContext from '../context/AppContext'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { MapPin, IndianRupee, Calendar, User, Home, Star, Edit, Trash2, Clock, } from 'lucide-react'
@@ -15,49 +14,36 @@ import {
 } from "recharts";
 
 import toast from 'react-hot-toast';
+import { useAuth } from '../../Auth/Hooks/useAuth';
+import { useListing } from '../Hooks/UseListing';
+import { useBooking } from './../../Booking/Hooks/useBooking';
 
-function OneListingProfile() {
-    const { userData, backendUrl, userToken, navigate, setEditListing, listing, GetListingData, getUserdata } = useContext(AppContext);
+function SelectListingDashboard() {
+    //const { backendUrl,  } = useContext(AppContext);
     const { list_id } = useParams();
+    //setEditListing, listing,
 
-    const [bookings, setBookings] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const { userData, userToken, navigate, getUserdata } = useAuth();
+    const { selectedListing, setEditListing, listingLoad, GetListingData } = useListing();
+
+    const { fetchListingBookings, bookings, get, listingBookingloading } = useBooking();
+
     const [activeTab, setActiveTab] = useState('details');
-    const [get, setGet] = useState(false);
+
 
     useEffect(() => {
         if (!userData)
             getUserdata()
 
         if (list_id && userToken) {
-            if (!listing)
+            if (!selectedListing)
                 GetListingData(list_id)
-            fetchListingBookings()
+            fetchListingBookings(list_id)
         }
     }, [list_id, userToken]);
 
 
 
-    const fetchListingBookings = async () => {
-        try {
-            const { data } = await axios.get(`${backendUrl}/booking/${list_id}`, {
-                headers: { authorization: `Bearer ${userToken}` }
-            });
-
-
-            if (data.success) {
-                setBookings(data.bookings || []);
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error('Error fetching booking details');
-        }
-        finally {
-            setGet(true)
-        }
-    };
-
-    console.log("booking details ", bookings)
 
     const handleDeleteListing = async () => {
         if (!window.confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
@@ -125,7 +111,7 @@ function OneListingProfile() {
         if (!active || !payload?.length) return null;
 
         const booking = payload[0].payload.booking;
-        
+
 
         if (!booking) {
             return (
@@ -155,11 +141,11 @@ function OneListingProfile() {
 
 
     const handleEditListing = () => {
-        setEditListing(listing);
+        setEditListing(selectedListing);
         navigate(`/edit/${list_id}`);
     };
 
-    if (isLoading) {
+    if (listingLoad) {
         return (
             <div className="w-full">
                 <div className="animate-pulse">
@@ -203,7 +189,7 @@ function OneListingProfile() {
         )
     }
 
-    if (!listing) {
+    if (!selectedListing) {
         return (
             <div className="w-full text-center py-12">
                 <div className="flex justify-center mb-4">
@@ -226,10 +212,10 @@ function OneListingProfile() {
             {/* Header with actions */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">{listing.title || 'Unnamed Listing'}</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{selectedListing.title || 'Unnamed Listing'}</h1>
                     <div className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4" />
-                        <span>{listing.location || 'Location not specified'}</span>
+                        <span>{selectedListing.location || 'Location not specified'}</span>
                     </div>
                 </div>
 
@@ -253,10 +239,10 @@ function OneListingProfile() {
 
             {/* Main image */}
             <div className="mb-6 rounded-lg overflow-hidden shadow-sm border border-gray-200">
-                {listing.image && listing.image.length > 0 ? (
+                {selectedListing?.image?.length > 0 ? (
                     <img
-                        src={listing.image[0].url}
-                        alt={listing.title}
+                        src={selectedListing.image[0].url}
+                        alt={selectedListing.title}
                         className="w-full h-64 md:h-80 object-cover"
                     />
                 ) : (
@@ -276,15 +262,22 @@ function OneListingProfile() {
                         Listing Details
                     </button>
                     <button
-
-                        onClick={() => {
-                            if (!get)
-                                return;
-                            setActiveTab('bookings')
-                        }}
-                        className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'bookings' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                        disabled={listingBookingloading}
+                        onClick={() => setActiveTab('bookings')}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'bookings' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} ${listingBookingloading ? 'cursor-not-allowed opacity-60' : ''}`}
                     >
-                        Bookings
+                        <div className="flex items-center justify-center gap-2">
+                            <span>Bookings</span>
+                            {listingBookingloading && (
+                                <span className="inline-flex items-center gap-2 text-sm text-gray-500">
+                                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+
+                                </span>
+                            )}
+                        </div>
                     </button>
                 </div>
             </div>
@@ -298,7 +291,7 @@ function OneListingProfile() {
                             <div className="mb-6">
                                 <h2 className="text-xl font-semibold text-gray-800 mb-2">About this place</h2>
                                 <p className="text-gray-600">
-                                    {listing.description || 'No description provided'}
+                                    {selectedListing.description || 'No description provided'}
                                 </p>
                             </div>
 
@@ -309,31 +302,31 @@ function OneListingProfile() {
                                         <Home className="w-5 h-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-500">Property Category</p>
-                                            <p className="font-medium text-gray-700">{listing.category || 'Not specified'}</p>
+                                            <p className="font-medium text-gray-700">{selectedListing.category || 'Not specified'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <User className="w-5 h-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-500">Max Guests</p>
-                                            <p className="font-medium text-gray-700">{listing.maxGuests || 'Not specified'}</p>
+                                            <p className="font-medium text-gray-700">{selectedListing.maxGuests || 'Not specified'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Star className="w-5 text-yellow-500  h-5 " />
                                         <div>
                                             <p className="text-sm text-gray-500">reviews</p>
-                                            <p className="font-medium text-gray-700">{listing.reviewsCount || 0}  reviews yet</p>
+                                            <p className="font-medium text-gray-700">{selectedListing.reviewsCount || 0}  reviews yet</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            {listing.amenities && listing.amenities.length > 0 && (
+                            {/* check again here  */}
+                            {selectedListing?.amenities?.length > 0 && (
                                 <div className="mb-6">
                                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Amenities</h3>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {listing.amenities.map((amenity, index) => (
+                                        {selectedListing.amenities.map((amenity, index) => (
                                             <div key={index} className="flex items-center gap-2">
                                                 <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
                                                 <span className="text-gray-700">{amenity}</span>
@@ -343,11 +336,11 @@ function OneListingProfile() {
                                 </div>
                             )}
 
-                            {listing.rules && listing.rules.length > 0 && (
+                            {selectedListing?.rules?.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-3">House Rules</h3>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {listing.rules.map((rule, index) => (
+                                        {selectedListing.rules.map((rule, index) => (
                                             <div key={index} className="flex items-start gap-2">
                                                 <div className="w-2 h-2 bg-gray-500 rounded-full mt-2"></div>
                                                 <span className="text-gray-700">{rule}</span>
@@ -366,7 +359,7 @@ function OneListingProfile() {
 
                             <div className="flex items-center gap-2 mb-4">
                                 <IndianRupee className="w-5 h-5 text-gray-700" />
-                                <span className="text-2xl font-bold text-gray-800">₹{listing.price || 0}</span>
+                                <span className="text-2xl font-bold text-gray-800">₹{selectedListing.price || 0}</span>
                                 <span className="text-gray-500">/ night</span>
                             </div>
 
@@ -375,11 +368,11 @@ function OneListingProfile() {
                                     <Calendar className="w-4 h-4 text-gray-500" />
                                     <span className="text-gray-700">Availability</span>
                                 </div>
-
-                                {!listing.isBook ?
+                                {/* check gain here */}
+                                {/* {!listing.isBook ?
                                     <p className="text-gray-600 text-sm"> Available for booking  </p> :
                                     <p className="text-gray-600 text-sm  text-red-500 ">Currently unavailable</p>
-                                }
+                                } */}
 
                             </div>
 
@@ -388,11 +381,11 @@ function OneListingProfile() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Total Bookings</p>
-                                        <p className="text-lg font-semibold text-gray-800">{listing.totalBookings || 0}</p>
+                                        <p className="text-lg font-semibold text-gray-800">{selectedListing.totalBookings || 0}</p>
                                     </div>
                                     <div className="bg-gray-50 p-3 rounded-lg">
                                         <p className="text-xs text-gray-500">Views</p>
-                                        <p className="text-lg font-semibold text-gray-800">{listing.views || 0}</p>
+                                        <p className="text-lg font-semibold text-gray-800">{selectedListing.views || 0}</p>
                                     </div>
                                 </div>
                             </div>
@@ -549,4 +542,4 @@ function getStatusColor(status) {
     }
 }
 
-export default OneListingProfile
+export default SelectListingDashboard

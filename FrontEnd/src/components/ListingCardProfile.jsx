@@ -1,72 +1,90 @@
-export interface ListingImage {
-    filename?: string;
-    url: string;
-}
+// export interface ListingImage {
+//     filename?: string;
+//     url: string;
+// }
 
-export interface Address {
-    country?: string;
-    float?: string;
-    streetAddress?: string;
-    NearByLandMark?: string;
-    District?: string;
-    city?: string;
-    state?: string;
-    pinConde?: string;
-}
+// export interface Address {
+//     country?: string;
+//     float?: string;
+//     streetAddress?: string;
+//     NearByLandMark?: string;
+//     District?: string;
+//     city?: string;
+//     state?: string;
+//     pinConde?: string;
+// }
 
-export interface Listing {
-    _id: string;
-    onwer: string;                 // keep typo to match backend
-    title: string;
-    date: string;
-    location: string;
-    address?: Address;
-    guestType?: string;
-    category?: string;
-    description: string;
-    isBook: string | null;
-    currentBooking: string[];
-    price: number;
-    image: ListingImage[];
-    reviews: string[];
-    createdAt: string;
-}
+// export interface Listing {
+//     _id: string;
+//     onwer: string;                 // keep typo to match backend
+//     title: string;
+//     date: string;
+//     location: string;
+//     address?: Address;
+//     guestType?: string;
+//     category?: string;
+//     description: string;
+//     isBook: string | null;
+//     currentBooking: string[];
+//     price: number;
+//     image: ListingImage[];
+//     reviews: string[];
+//     createdAt: string;
+// }
 
-export interface User {
-    id: string;
-    email: string;
-    name: string;
-    totalPublicListings: string[];
-    totalBookings: string[];
-}
+// export interface User {
+//     id: string;
+//     email: string;
+//     name: string;
+//     totalPublicListings: string[];
+//     totalBookings: string[];
+// }
 
-interface ListingCardProfileProps {
-    userData: User;
-    listing: Listing;
-}
+// interface ListingCardProfileProps {
+//     userData: User;
+//     listing: Listing;
+// }
 
-import { useContext } from 'react';
-import AppContext from '../context/AppContext'
+// import { useContext } from 'react';
+// import AppContext from '../context/AppContext'
 import { MapPin, IndianRupee, Calendar, Eye, Edit, ArrowRight } from 'lucide-react';
+import { useAuth } from '../Features/Auth/Hooks/useAuth';
+import { useListing } from '../Features/Listing/Hooks/UseListing';
+import { useBooking } from '../Features/Booking/Hooks/useBooking';
 
-function ListingCardProfile({ userData, listing }: ListingCardProfileProps) {
-    const { navigate, setListing } = useContext<any>(AppContext);
+function ListingCardProfile({ listing }) {
+
+    const { setBookings } = useBooking()
+
+
+    const { setSelectedListing } = useListing();
+
+    const { userData, navigate } = useAuth();
 
 
     const handleViewListing = () => {
-        setListing(listing)
+        setSelectedListing(listing)
+        setBookings([])
         navigate(`/profile/${userData.id}/${listing._id}`);
     };
 
-    const handleEditListing = (e: React.MouseEvent<HTMLElement>) => {
+    const handleEditListing = (e) => {
         e.stopPropagation();
         navigate(`/edit/${listing._id}`);
     };
 
-    const handleViewPublic = (e: React.MouseEvent<HTMLElement>) => {
+    const handleViewPublic = (e) => {
         e.stopPropagation();
         navigate(`/${listing._id}`,);
     };
+
+    if (!listing) {
+        return (
+            <div>
+                Listing not found
+            </div>
+        )
+    }
 
     return (
         <div
@@ -113,8 +131,8 @@ function ListingCardProfile({ userData, listing }: ListingCardProfileProps) {
 
                         <div className={` ${listing.isBook ? " text-red-500 " : ""} flex items-center gap-1 text-gray-500'`}>
                             <Calendar className='w-4 h-4' />
-                            <span
-                            >{!listing.isBook ? 'Available' : 'Unavailable'}</span>
+                            <span className='text-red-700'
+                            >check again here</span>
                         </div>
 
                         <div className='flex items-center gap-1 text-gray-500'>

@@ -1,29 +1,31 @@
 
 import { useContext, useEffect, useState } from 'react'
-import AppContext from '../context/AppContext';
+import AppContext from '../../../context/AppContext';
 import axios from 'axios';
-import HomePageSkeleton from '../components/skeletons/HomePageSkeleton';
-import LisitngCard from '../components/LisitngCard';
+import HomePageSkeleton from '../../../components/skeletons/HomePageSkeleton';
+import LisitngCard from '../../../components/LisitngCard';
+import { useAuth } from '../../Auth/Hooks/useAuth';
 
 function AllListing() {
 
-    const { backendUrl, isHomePageLoading, setHomePageLoading } = useContext(AppContext);
+    const {  isHomePageLoading,  } = useContext(AppContext);
+    const { allData } = useAuth()
 
     const [listings, setListings] = useState([]);
 
-    const allData = async () => {
+    // const allData = async () => {
 
-        setHomePageLoading(true);
-        try {
-            const { data } = await axios.get(`${backendUrl}/listing/`)
-            setListings(data.Listings)
-        } catch (err) {
-            console.log(err)
-        } finally {
-            setHomePageLoading(false);
-        }
+    //     setHomePageLoading(true);
+    //     try {
+    //         const { data } = await axios.get(`${backendUrl}/listing/`)
+    //         setListings(data.Listings)
+    //     } catch (err) {
+    //         console.log(err)
+    //     } finally {
+    //         setHomePageLoading(false);
+    //     }
 
-    }
+    // }
     useEffect(() => {
         allData()
     }, [])

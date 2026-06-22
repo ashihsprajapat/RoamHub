@@ -1,42 +1,28 @@
 
-import { useContext, useEffect, useState } from 'react'
-import AppContext from '../context/AppContext'
-import axios from 'axios';
+import { useEffect, } from 'react'
+// import AppContext from '../../../context/AppContext'
 import { toast } from 'react-toastify';
-import ListingCardProfile from '../components/ListingCardProfile';
-import AllListingSckeleton from '../components/skeletons/AllListingSckeleton';
+import ListingCardProfile from '../../../components/ListingCardProfile';
+import AllListingSckeleton from '../../../components/skeletons/AllListingSckeleton';
 import { Home, Plus, RefreshCw } from 'lucide-react';
+import { useListing } from '../Hooks/UseListing';
+import { useAuth } from '../../Auth/Hooks/useAuth';
+import { useBooking } from '../../Booking/Hooks/useBooking';
 
 
 
 function AllListingProfile() {
-    const { userData, navigate, backendUrl, userToken } = useContext(AppContext);
-    const [allListing, setAllListing] = useState([])
-    const { setListing } = useContext(AppContext)
-    const [isLoading, setIsLoading] = useState(true);
+    // const { setListing } = useContext(AppContext);
 
-    const getAllListings = async () => {
-        try {
-            setIsLoading(true);
-            if (userData.totalPublicListings === 0)
-                return;
+    const { navigate, userToken } = useAuth();
 
-            const { data } = await axios.get(`${backendUrl}/listing/all-listing`, { headers: { authorization: `bearer ${userToken}` } });
+    const { getAllListings, allListing, isLoading } = useListing();
 
-            if (data.success) {
-                setAllListing(data.Listings.reverse() || []);
-            } else {
-                toast.error(data.message || 'Failed to fetch listings');
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
+
 
     const handleRefresh = () => {
+        console.log("refersh")
         getAllListings();
         toast.info('Refreshing listings...');
     };
@@ -80,8 +66,9 @@ function AllListingProfile() {
             {allListing && allListing.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 mb-6">
                     {allListing.map((listing, i) => (
-                        <ListingCardProfile userData={userData} listing={listing} key={i}
-                            onClick={() => setListing(listing)} />
+                        <ListingCardProfile listing={listing} key={i}
+                        //onClick={() => setListing(listing)} 
+                        />
                     ))}
                 </div>
             ) : (

@@ -1,5 +1,5 @@
 
-import { assets } from './../assets/assets';
+import { assets } from '../../assets/assets';
 
 function Footer() {
     return (

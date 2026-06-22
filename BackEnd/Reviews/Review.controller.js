@@ -18,7 +18,7 @@ export const createReview = async (req, res) => {
 
     const { id } = req.params;
     try {
-        const listing = await Listing.findById(id);
+        let listing = await Listing.findById(id);
         if (!listing)
             return res.status(404).json({ success: false });
 

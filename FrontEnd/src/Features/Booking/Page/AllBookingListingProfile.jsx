@@ -1,38 +1,21 @@
 
 
 import { useContext, useEffect, useState } from 'react'
-import AppContext from '../context/AppContext'
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Calendar, MapPin, Clock, Home, CircleCheckBig } from 'lucide-react';
+import { Calendar, MapPin, Clock, CircleCheckBig } from 'lucide-react';
+import AppContext from '../../../context/AppContext';
+import { useAuth } from '../../Auth/Hooks/useAuth';
+import { useBooking } from '../Hooks/useBooking';
 
 function AllBookingListingProfile() {
-    const { navigate, backendUrl, userData, userToken } = useContext(AppContext);
-    const [bookings, setBookings] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // const { navigate, backendUrl, userData, userToken } = useContext(AppContext);
+    const { userToken, navigate } = useAuth();
+    const { isLoading, userBooking, getAllBookings } = useBooking();
+    // const [bookings, setBookings] = useState([]);
+    // const [isLoading, setIsLoading] = useState(true);
 
 
-    const getAllBookings = async () => {
-        try {
-            setIsLoading(true);
-            if (userData.totalBookings == 0)
-                return;
-            const { data } = await axios.get(`${backendUrl}/booking/user-bookings`, {
-                headers: { authorization: `Bearer ${userToken}` }
-            });
-
-            if (data.success) {
-                setBookings(data.bookings || []);
-            } else {
-                toast.error(data.message || 'Failed to fetch bookings');
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error('Error fetching bookings');
-        } finally {
-            setIsLoading(false);
-        }
-    }
 
     useEffect(() => {
         if (userToken) {
@@ -75,9 +58,9 @@ function AllBookingListingProfile() {
                 <p className="text-gray-600">Manage all your bookings in one place</p>
             </div>
 
-            {bookings && bookings.length > 0 ? (
+            {userBooking?.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {bookings.map((booking, index) => (
+                    {userBooking.map((booking, index) => (
                         <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
 
 
