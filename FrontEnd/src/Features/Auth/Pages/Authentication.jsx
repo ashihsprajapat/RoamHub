@@ -1,19 +1,20 @@
 
-import { useContext, useState } from 'react'
+
 import { assets } from '../../../assets/assets';
-import AppContext from '../../../context/AppContext';
 import toast from 'react-hot-toast';
 import { useAuth } from '../Hooks/useAuth';
+import { useState } from 'react';
 
 
 function Authentication() {
-    const { navigate, isLoading, setIsLoading } = useContext(AppContext);
+    // const { } = useContext(AppContext);
     // console.log(backendUrl)
-    const { setUserToken, state, setState, Authentication } = useAuth()
+    const { setUserToken, state, navigate, setState, Authentication } = useAuth()
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const onSubmithandler = async (e) => {
         e.preventDefault();
