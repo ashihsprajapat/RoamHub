@@ -17,10 +17,12 @@ import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
 import axios from 'axios';
 import { ArrowLeft, ArrowRight, Check, Home, MapPin, Upload, Image, PenSquare, IndianRupee } from 'lucide-react';
 import toast from 'react-hot-toast';
-import AppContext from '../../../context/AppContext';
+import { useAuth } from '../../Auth/Hooks/useAuth';
+import { useListing } from '../Hooks/UseListing';
 
 function CreateListing() {
-    const { backendUrl, userToken, navigate, setListings, userData, setUserData } = useContext(AppContext);
+    const { setListings } = useListing()
+    const { userData, userToken, navigate, setUserData, backendUrl } = useAuth()
     if (!userData?.verify) {
         toast.success("Please verify email")
         navigate("/verify-email")

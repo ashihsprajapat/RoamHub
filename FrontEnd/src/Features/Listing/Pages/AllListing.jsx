@@ -13,19 +13,7 @@ function AllListing() {
 
     const [listings, setListings] = useState([]);
 
-    // const allData = async () => {
-
-    //     setHomePageLoading(true);
-    //     try {
-    //         const { data } = await axios.get(`${backendUrl}/listing/`)
-    //         setListings(data.Listings)
-    //     } catch (err) {
-    //         console.log(err)
-    //     } finally {
-    //         setHomePageLoading(false);
-    //     }
-
-    // }
+   
     useEffect(() => {
         allData()
     }, [])

@@ -14,13 +14,13 @@ function Navbar() {
     const { userData, setState } = useAuth()
 
     return (
-        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-2 border-b border-gray-300 bg-white relative">
+        <nav className="flex  items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-3 border-b border-gray-300 bg-white relative">
 
             {/* Logo */}
             <NavLink to="/">
                 <img
-                    className=" w-32 h-24  border-red-400  cursor-pointer"
-                    src={assets.RantoraLogo}
+                    className="h-12 w-auto rounded-lg  cursor-pointer object-contain transition-transform duration-200 hover:scale-105"
+                    src={assets.RoamHub}
                     alt="logo"
                     onClick={() => navigate('/')}
                 />
@@ -39,7 +39,12 @@ function Navbar() {
                 </div>
                 {
                     userData?.verify ?
-                        <NavLink to="/host/homes">Air bnb Your Home</NavLink>
+                        <NavLink to="/host/homes" className="relative group font-semibold text-gray-700 hover:text-gray-900">
+                            <span className="inline-flex items-center gap-1">
+                                Host Your Room
+                                <span className="absolute inset-x-0 -bottom-0.5 h-0.5 scale-x-0 bg-gray-900 transition-transform duration-300 origin-left group-hover:scale-x-100" />
+                            </span>
+                        </NavLink>
                         : (userData &&
                             <NavLink className={`text-red-500 border border-gray-600 bg-gray-300 px-7 rounded-3xl font-semibold cursor-pointer hover:bg-gray-200 py-1
                         `} to="/verify-email">Verify Email</NavLink>)
@@ -91,8 +96,11 @@ function Navbar() {
             >
                 {
                     userData?.verify ?
-                        <NavLink to="/host/homes" onClick={() => setOpen(false)}>
-                            Air bnb your home
+                        <NavLink to="/host/homes" className="relative group hover:text-gray-900" onClick={() => setOpen(false)}>
+                            <span className="inline-flex items-center gap-1">
+                                Host Your Room
+                                <span className="absolute inset-x-0 -bottom-0.5 h-0.5 scale-x-0 bg-gray-900 transition-transform duration-300 origin-left group-hover:scale-x-100" />
+                            </span>
                         </NavLink>
                         :
                         <NavLink className={`text-red-500 border border-gray-600 bg-gray-300 px-7 rounded-3xl font-semibold cursor-pointer hover:bg-gray-200 py-1

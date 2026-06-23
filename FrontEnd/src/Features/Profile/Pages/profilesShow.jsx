@@ -118,7 +118,7 @@ function ProfileShow() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-200 py-4 bg-white shadow-sm">
                 <a href="/" className="flex items-center gap-2">
-                    <img className="h-8" src={assets.logo_2} alt="Airbnb Logo" />
+                    <img className="h-8" src={assets.RoamHub} alt="Airbnb Logo" />
                     <span className="font-semibold text-rose-500 hidden md:block">Dashboard</span>
                 </a>
                 <div className="flex items-center gap-4">

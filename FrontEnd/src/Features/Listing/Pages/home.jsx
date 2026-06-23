@@ -1,9 +1,9 @@
 
-import { useContext, } from "react";
+import { useContext, useState } from "react";
 import AppContext from "../../../context/AppContext";
 import LisitngCard from "../../../components/LisitngCard";
 import HomePageSkeleton from '../../../components/skeletons/HomePageSkeleton';
-import { Search, Home as HomeIcon, Smartphone } from 'lucide-react';
+import { Search, Home as HomeIcon, Smartphone, MapPin, CalendarDays, Users } from 'lucide-react';
 import FortIcon from '@mui/icons-material/Fort';
 import BusinessIcon from '@mui/icons-material/Business';
 import CottageIcon from '@mui/icons-material/Cottage';
@@ -19,6 +19,9 @@ function Home() {
 
         searchQuery, setSearchQuery,
         activeCategory, setActiveCategory } = useListing();
+
+    const [dateRange, setDateRange] = useState('Add dates');
+    const [guestCount, setGuestCount] = useState(2);
 
     const categories = [
         { name: 'All', },
@@ -39,29 +42,80 @@ function Home() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-rose-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8 mb-8">
+            <div className="bg-gradient-to-r from-rose-50 via-white to-indigo-50 py-12 px-4 sm:px-6 lg:px-8 mb-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                            Find your perfect getaway
-                        </h1>
-                        <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-                            Discover unique places to stay and experiences to try around the world
-                        </p>
-
-                        {/* Search Bar */}
-                        <div className="max-w-md mx-auto relative">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search by location or property name"
-                                    className="w-full py-3 pl-12 pr-4 text-gray-700 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-rose-300 shadow-md"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Search className="h-5 w-5 text-gray-400" />
+                    <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl overflow-hidden">
+                        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 p-8 lg:p-12">
+                            <div className="space-y-6">
+                                <div className="inline-flex items-center gap-2 rounded-full bg-rose-100 text-rose-700 px-4 py-2 text-sm font-medium shadow-sm">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                                    Booking made simple for every stay
                                 </div>
+                                <div>
+                                    <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900">
+                                        Find the perfect place for your next trip
+                                    </h1>
+                                    <p className="mt-4 text-base sm:text-lg text-gray-600 max-w-2xl">
+                                        Search by location, property type, dates, and guests so you can book faster.
+                                    </p>
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <button className="flex items-center justify-center gap-2 rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:border-rose-300 hover:text-rose-600 transition">
+                                        <MapPin className="h-4 w-4" />
+                                        Anywhere
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:border-rose-300 hover:text-rose-600 transition">
+                                        <CalendarDays className="h-4 w-4" />
+                                        {dateRange}
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:border-rose-300 hover:text-rose-600 transition">
+                                        <Users className="h-4 w-4" />
+                                        {guestCount} guests
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="rounded-[1.75rem] bg-rose-50 p-6 shadow-inner shadow-rose-100/80">
+                                <div className="mb-4 text-sm font-semibold text-rose-700">Quick search</div>
+                                <form className="space-y-4">
+                                    <label className="block">
+                                        <span className="mb-2 block text-sm font-medium text-gray-700">Location</span>
+                                        <div className="relative">
+                                            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Where are you going?"
+                                                className="w-full rounded-3xl border border-gray-200 bg-white py-3 pl-12 pr-4 text-gray-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block">
+                                            <span className="mb-2 block text-sm font-medium text-gray-700">Dates</span>
+                                            <input
+                                                type="text"
+                                                value={dateRange}
+                                                readOnly
+                                                className="w-full rounded-3xl border border-gray-200 bg-white py-3 px-4 text-gray-700 shadow-sm"
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="mb-2 block text-sm font-medium text-gray-700">Guests</span>
+                                            <input
+                                                type="text"
+                                                value={`${guestCount} guest${guestCount > 1 ? 's' : ''}`}
+                                                readOnly
+                                                className="w-full rounded-3xl border border-gray-200 bg-white py-3 px-4 text-gray-700 shadow-sm"
+                                            />
+                                        </label>
+                                    </div>
+                                    <button type="button" className="w-full rounded-3xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-rose-700">
+                                        Search listings
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -112,7 +166,7 @@ function Home() {
                             <div className="inline-block p-2 bg-indigo-100 rounded-full mb-4">
                                 <Smartphone className="h-6 w-6 text-indigo-600" />
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Get the Airbnb App</h2>
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Get the RoamHub App</h2>
                             <p className="text-gray-600 mb-6">Book unique places to stay and things to do, wherever you are in the world.</p>
 
                             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
@@ -134,7 +188,7 @@ function Home() {
                             <img
                                 className="h-full w-full object-cover"
                                 src="https://tse1.mm.bing.net/th/id/OIP.p3t-u_PDrPyBZmlSuRgd2wHaHa?pid=Api&P=0&h=180"
-                                alt="Airbnb mobile app"
+                                alt="RoamHub mobile app"
                             />
                         </div>
                     </div>

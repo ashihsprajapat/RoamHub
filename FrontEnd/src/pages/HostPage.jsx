@@ -1,5 +1,5 @@
 
-import  { useState } from 'react'
+import { useState } from 'react'
 import { MapPin, Home, Calendar, ArrowRight } from 'lucide-react';
 import { useContext } from 'react';
 import AppContext from './../context/AppContext';
@@ -8,9 +8,9 @@ function HostPage() {
     const [estimatedEarnings, setEstimatedEarnings] = useState(2025);
     const [nightlyRate, setNightlyRate] = useState(3649);
     const [nights, setNights] = useState(12);
-    
 
-    const {navigate}= useContext(AppContext)
+
+    const { navigate } = useContext(AppContext)
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -21,7 +21,7 @@ function HostPage() {
                         {/* Left content */}
                         <div className="p-6 sm:p-10 lg:p-12 lg:w-1/2 flex flex-col justify-center">
                             <h1 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-rose-500 to-pink-600 bg-clip-text text-transparent">
-                                Airbnb it.
+                                RoamHub it.
                             </h1>
 
                             <div className="mb-8">
@@ -61,12 +61,12 @@ function HostPage() {
                             </div>
 
                             {/* CTA Button */}
-                            
-                                <button className="mt-8 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition duration-200 transform hover:-translate-y-0.5"
-                                onClick={()=> navigate("/become-a-host")}>
-                                    Get started
-                                </button>
-                                
+
+                            <button className="mt-8 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-medium py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition duration-200 transform hover:-translate-y-0.5"
+                                onClick={() => navigate("/become-a-host")}>
+                                Get started
+                            </button>
+
                         </div>
 
                         {/* Right image */}
@@ -89,7 +89,7 @@ function HostPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <h3 className="text-xl font-semibold mb-2">Airbnb it with confidence</h3>
+                        <h3 className="text-xl font-semibold mb-2">RoamHub it with confidence</h3>
                         <p className="text-gray-600">We offer top-tier insurance coverage and protection against damages.</p>
                     </div>
 
@@ -100,7 +100,7 @@ function HostPage() {
                             </svg>
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Earn extra income</h3>
-                        <p className="text-gray-600">Turn your extra space into extra income with Airbnb hosting.</p>
+                        <p className="text-gray-600">Turn your extra space into extra income with RoamHub hosting.</p>
                     </div>
 
                     <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition duration-200">

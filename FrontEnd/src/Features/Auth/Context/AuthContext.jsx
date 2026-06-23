@@ -10,6 +10,7 @@ const AuthContext = createContext("")
 export function AuthProvider(props) {
 
     const navigate = useNavigate("");
+    const backendUrl = import.meta.env.VITE_BACKEND_URL
 
     const [userToken, setUserToken] = useState(null);
     const [userData, setUserData] = useState(null);
@@ -75,7 +76,8 @@ export function AuthProvider(props) {
         getUserData,
         currDashboard, setCurrDashboard,
         logoutFormShow, setLogoutFormShow,
-        navigate
+        navigate,
+        backendUrl
     }
 
     return (

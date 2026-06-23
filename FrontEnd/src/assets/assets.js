@@ -6,6 +6,7 @@ import logo from './ABNB-4aaade0f.png'
 import imageUpload from './profile_upload_icon.svg'
 import logo_2 from "./logo_2.png"
 import RantoraLogo  from './RantoraLogo.png'
+import RoamHub from './RoamHubLogo.png'
 
 export const assets={
     lockicon,
@@ -14,7 +15,8 @@ export const assets={
     logo,
     imageUpload,
     logo_2,
-    RantoraLogo
+    RantoraLogo,
+    RoamHub
 }
 
 export const categrou=[
