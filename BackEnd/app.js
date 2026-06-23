@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 
-const allowedOrigins = ['http://localhost:5173', 'https://air-bnb-booking-app-psi.vercel.app']; // Add production domain here
+const allowedOrigins = ['http://localhost:5173',  'https://roam-hub-eight.vercel.app' , 'https://air-bnb-booking-app-psi.vercel.app']; // Add production domain here
 
 app.use(cors({
     origin: (origin, callback) => {
