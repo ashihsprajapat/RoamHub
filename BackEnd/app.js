@@ -51,27 +51,16 @@ app.listen(port, () => {
 import connectToDataBase from "./config/mongooseDB.js";
 import bookingRout from "./Booking/booking.rout.js";
 import transactionRoute from "./Transaction/transacation.rout.js";
+import { startServerF } from "./startServer.js";
 
 
+await startServerF()
 
-  await transport.verify()
-  .then(()=> console.log("Verify nodemail tranpost"))
-  .catch(e => console.log("Error occur in nodemail "))
-
-//connect to database 
-await connectToDataBase()
-  .then(() => {
-    console.log("connect to data base");
-  })
-  .catch(err => console.log(err));
 
 
 app.get("/", (req, res) => { res.send( "Api is working fine" ) })
 
-//connect to cloudinary
-await connectToCloudinary()
-.then( ()=> console.log("connect to claudinary"))
-.catch(e=> console.log(e))
+
 
 
 //routes for listing
