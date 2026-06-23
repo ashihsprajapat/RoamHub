@@ -9,6 +9,12 @@ import express from "express";
 import connectToCloudinary from "./config/cloundinary.js";
 import cors from 'cors'
 
+import  client from './config/Redis.js'
+import {transport} from './config/NodeMailer.js'
+import { prisma } from "./lib/prisma.js";
+import { protectListing, verifyEmail } from "./middleware/protectListing.js";
+import LoadRoute from "./Reviews/LoadReviewsRoute.js";
+
 //route for review
 import revieRoute from './Reviews/review.rout.js'
 
@@ -47,6 +53,11 @@ import bookingRout from "./Booking/booking.rout.js";
 import transactionRoute from "./Transaction/transacation.rout.js";
 
 
+
+  await transport.verify()
+  .then(()=> console.log("Verify nodemail tranpost"))
+  .catch(e => console.log("Error occur in nodemail "))
+
 //connect to database 
 await connectToDataBase()
   .then(() => {
@@ -57,18 +68,10 @@ await connectToDataBase()
 
 app.get("/", (req, res) => { res.send( "Api is working fine" ) })
 
-import  client from './config/Redis.js'
-import {transport} from './config/NodeMailer.js'
-import { prisma } from "./lib/prisma.js";
-import { protectListing, verifyEmail } from "./middleware/protectListing.js";
-import LoadRoute from "./Reviews/LoadReviewsRoute.js";
-
-  await transport.verify()
-  .then(()=> console.log("Verify nodemail tranpost"))
-  .catch(e => console.log("Error occur in nodemail "))
-
 //connect to cloudinary
-await connectToCloudinary();
+await connectToCloudinary()
+.then( ()=> console.log("connect to claudinary"))
+.catch(e=> console.log(e))
 
 
 //routes for listing
