@@ -2,17 +2,17 @@ import { useContext, useState, useEffect } from "react"
 import AppContext from "../../../context/AppContext"
 import axios from "axios"
 import { toast } from "react-hot-toast"
+import { useAuth } from "../Hooks/useAuth"
 
 
 const VerifyEmail = () => {
 
-    const { userData, navigate, backendUrl, userToken, setUserData } = useContext(AppContext)
+    const { userData, navigate, backendUrl, userToken, setUserData } = useAuth()
+
     const [otp, setOtp] = useState("");
-    const [timeing, setTiming] = useState(false)
 
     const [timeLeft, setTimeLeft] = useState(0); // 60 seconds
 
-    console.log("user data is", userData)
 
     useEffect(() => {
         if (timeLeft === 0) return;
@@ -38,7 +38,7 @@ const VerifyEmail = () => {
         try {
             setLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/sendOTP`, {}, { headers: { authorization: `Bearer ${userToken}` } })
-            console.log("data  after sending otp ", data)
+           
             if (data.success) {
                 toast.success(data.message)
                 setTimeLeft(60)
@@ -60,7 +60,7 @@ const VerifyEmail = () => {
             e.preventDefault()
             setLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/verifyOtp`, { otp: otp }, { headers: { authorization: `Bearer ${userToken}` } })
-          
+
             if (data.success) {
                 setUserData(data.user);
                 toast.success(data.message)

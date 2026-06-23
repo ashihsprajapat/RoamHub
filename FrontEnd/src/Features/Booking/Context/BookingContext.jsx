@@ -39,7 +39,7 @@ export const BookingProvider = ({ children }) => {
         try {
             setListingBookingloading(true)
             const { data } = await getAllBookingOfSelectedListing(Lid, userToken)
-            console.log("data after getting all booking of user", data)
+         
             if (data.success) {
                 setBookings(data.bookings)
             }
@@ -101,7 +101,7 @@ export const BookingProvider = ({ children }) => {
                         guests
                     }
                     const { data } = await verifyTransaction(id, userToken, verifyData)
-                    console.log("After verify trnaction response is", data)
+                  
                     if (data.success) {
                         toast.success(data.message)
                         setUserData(data.user)
@@ -130,7 +130,7 @@ export const BookingProvider = ({ children }) => {
             let paymentType = "online";
             let totalAmount = total;
             const { data } = await createTranascation(id, userToken, totalAmount, paymentType, from, to)
-            console.log("Data after creating trnassaction", data)
+           
             if (data.success) {
                 initPay(id, data.order, SelectedListing);
             }

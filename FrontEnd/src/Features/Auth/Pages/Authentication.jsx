@@ -23,7 +23,7 @@ function Authentication() {
         try {
 
             let data = await Authentication(email, password, name);
-            console.log("User data ", data)
+         
             if (data.success) {
                 localStorage.setItem("air_bnb_token", data.token);
                 navigate("/")
@@ -44,39 +44,13 @@ function Authentication() {
     }
 
 
-    //     setIsLoading(true)
-    //     try {
-    //         const { data } = await axios.post(`${backendUrl}/auth/register`, {
-    //             name, email, password
-    //         })
-    //         if (data.success) {
-    //             setName("");
-    //             setEmail('');
-    //             setPassword("");
-    //             localStorage.setItem("air_bnb_token", data.token)
-    //             toast.success(data.message);
-    //             navigate("/")
-    //             setUserToken(data.token)
-    //         } else {
-    //             toast.error(data.message)
-    //             setPassword("");
-    //             setEmail('');
-    //         }
-    //     } catch (err) {
-    //         toast.error(err.message)
-    //         setIsLoading(false);
-    //     } finally {
-    //         setIsLoading(false)
-    //     }
-
-    // }
 
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
             <div className="w-full max-w-md space-y-8 bg-white p-6 sm:p-10 rounded-xl shadow-md">
                 <div className="text-center">
-                    <img className="mx-auto h-12 w-auto" src={assets.logo} alt="Airbnb Logo" />
+                    <img className="mx-auto h-12 w-auto" src={assets.RoamHub2} alt="Airbnb Logo" />
                     <h1 className="mt-6 text-3xl font-extrabold text-gray-900">User {state}</h1>
                     <p className="mt-2 text-sm text-gray-600">
                         {state === 'Login' ? 'Sign in to your account' : 'Create your account'}

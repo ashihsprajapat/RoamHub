@@ -31,7 +31,7 @@ export const ReviewProvider = ({ children }) => {
         setReviewSubLoading(true);
         try {
             const { data } = await createReviewApi(id, rating, comment, userToken);
-            console.log("data of creating reviews", data)
+          
             if (data.success) {
                 toast.success("Review submitted successfully");
                 setRating(0);

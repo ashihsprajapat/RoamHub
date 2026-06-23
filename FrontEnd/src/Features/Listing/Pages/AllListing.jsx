@@ -1,19 +1,18 @@
 
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, } from 'react'
 import AppContext from '../../../context/AppContext';
-import axios from 'axios';
 import HomePageSkeleton from '../../../components/skeletons/HomePageSkeleton';
 import LisitngCard from '../../../components/LisitngCard';
-import { useAuth } from '../../Auth/Hooks/useAuth';
+import { useListing } from '../Hooks/UseListing';
 
 function AllListing() {
 
-    const {  isHomePageLoading,  } = useContext(AppContext);
-    const { allData } = useAuth()
+    const { isHomePageLoading, } = useContext(AppContext);
+    const { allData, listings } = useListing()
 
-    const [listings, setListings] = useState([]);
 
-   
+
+
     useEffect(() => {
         allData()
     }, [])

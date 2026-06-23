@@ -1,19 +1,13 @@
 
 
-import { useContext, useEffect, useState } from 'react'
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useEffect } from 'react'
 import { Calendar, MapPin, Clock, CircleCheckBig } from 'lucide-react';
-import AppContext from '../../../context/AppContext';
 import { useAuth } from '../../Auth/Hooks/useAuth';
 import { useBooking } from '../Hooks/useBooking';
 
 function AllBookingListingProfile() {
-    // const { navigate, backendUrl, userData, userToken } = useContext(AppContext);
     const { userToken, navigate } = useAuth();
     const { isLoading, userBooking, getAllBookings } = useBooking();
-    // const [bookings, setBookings] = useState([]);
-    // const [isLoading, setIsLoading] = useState(true);
 
 
 

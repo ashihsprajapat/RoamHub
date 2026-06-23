@@ -116,10 +116,8 @@ export const ListingProvider = ({ children }) => {
             setIsLoading(true);
             if (userData.totalPublicListings === 0)
                 return;
-            console.log("calling to get all Listing host by user")
 
             const { data } = await getAllListingHostByUser(userToken);
-            console.log("getting all listing", data)
             if (data.success) {
                 setAllListing(data.Listings.reverse() || []);
             } else {
@@ -139,7 +137,6 @@ export const ListingProvider = ({ children }) => {
             setIsLoading(true);
 
             const { data } = await editListingService(id, formData, userToken)
-            console.log("data after edit listing", data)
             if (data.success) {
                 setEditListing(data.updateListing)
                 navigate(`/profile/${userData.id}/${id}`)

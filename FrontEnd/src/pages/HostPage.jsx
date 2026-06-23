@@ -1,8 +1,7 @@
 
 import { useState } from 'react'
 import { MapPin, Home, Calendar, ArrowRight } from 'lucide-react';
-import { useContext } from 'react';
-import AppContext from './../context/AppContext';
+import { useAuth } from '../Features/Auth/Hooks/useAuth';
 
 function HostPage() {
     const [estimatedEarnings, setEstimatedEarnings] = useState(2025);
@@ -10,7 +9,7 @@ function HostPage() {
     const [nights, setNights] = useState(12);
 
 
-    const { navigate } = useContext(AppContext)
+    const { navigate } = useAuth()
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-10 px-4 sm:px-6 lg:px-8">
