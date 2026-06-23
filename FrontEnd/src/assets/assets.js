@@ -16,7 +16,7 @@ export const assets={
     imageUpload,
     logo_2,
     RantoraLogo,
-    RoamHub
+    RoamHub,
 }
 
 export const categrou=[
