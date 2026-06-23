@@ -1,8 +1,8 @@
-import { useContext, useState, useEffect } from "react"
-import AppContext from "../../../context/AppContext"
+
 import axios from "axios"
 import { toast } from "react-hot-toast"
 import { useAuth } from "../Hooks/useAuth"
+import { useEffect, useState } from "react"
 
 
 const VerifyEmail = () => {
@@ -12,6 +12,8 @@ const VerifyEmail = () => {
     const [otp, setOtp] = useState("");
 
     const [timeLeft, setTimeLeft] = useState(0); // 60 seconds
+    const [optloading, setOtpLoading] = useState(false)
+    const [verifyloading, setVerifyLoading] = useState(false)
 
 
     useEffect(() => {
@@ -31,17 +33,15 @@ const VerifyEmail = () => {
         return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
     };
 
-    const [loading, setLoading] = useState(false);
 
 
     const sendOTP = async () => {
         try {
-            setLoading(true);
+            setOtpLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/sendOTP`, {}, { headers: { authorization: `Bearer ${userToken}` } })
-           
             if (data.success) {
                 toast.success(data.message)
-                setTimeLeft(60)
+                setTimeLeft(180)
             } else
                 toast.error(data.message)
         } catch (error) {
@@ -49,7 +49,7 @@ const VerifyEmail = () => {
             console.log(error)
         }
         finally {
-            setLoading(false);
+            setOtpLoading(false);
         }
     }
 
@@ -58,9 +58,8 @@ const VerifyEmail = () => {
         try {
 
             e.preventDefault()
-            setLoading(true);
+            setVerifyLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/verifyOtp`, { otp: otp }, { headers: { authorization: `Bearer ${userToken}` } })
-
             if (data.success) {
                 setUserData(data.user);
                 toast.success(data.message)
@@ -71,7 +70,7 @@ const VerifyEmail = () => {
         } catch (error) {
             console.log(error)
         } finally {
-            setLoading(false);
+            setVerifyLoading(false);
         }
     }
 
@@ -115,12 +114,15 @@ const VerifyEmail = () => {
 
                         <button
                             type="button"
-                            disabled={timeLeft > 0 || userData?.verify || loading}
+                            disabled={timeLeft > 0 || userData?.verify || optloading}
                             title={userData?.verify ? "You have already verified" : timeLeft > 0 ? "Wait for current OTP to expire" : ""}
-                            className={`border border-white px-4 py-2 rounded-xl bg-green-950 text-white  ${(timeLeft > 0 || userData?.verify) ? "cursor-not-allowed opacity-60" : "cursor-pointer"} `}
+                            className={`inline-flex items-center justify-center gap-2 border border-white px-4 py-2 rounded-xl bg-green-950 text-white  ${timeLeft > 0 || userData?.verify || optloading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                             onClick={sendOTP}
                         >
-                            Send OTP
+                            {optloading && (
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            )}
+                            {optloading ? "Sending OTP..." : "Send OTP"}
                         </button>
 
                         <div>
@@ -141,14 +143,15 @@ const VerifyEmail = () => {
                                 By submitting, you agree to our <span className='text-gray-800'>Terms</span> and <span className='text-gray-800'>Privacy Policy</span>.
                             </p>
                             <button
-                                disabled={loading || userData?.verify}
+                                disabled={verifyloading || userData?.verify}
                                 title={userData?.verify ? "You have already verified" : ""}
                                 onClick={(e) => verify(e)}
                                 type="submit"
-                                className={`bg-liner-to-r from-red-600 to-red-900 bg-green-600  border-2 border-green-900 hover:from-green-600 hover:to-green-950 text-white text-md px-5 md:px-16 py-3 rounded-full transition duration-300 cursor-pointer    ${userData?.verify ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                                {
-                                    loading ? "Verify...." : "Verify"
-                                }
+                                className={`inline-flex items-center justify-center gap-2 bg-liner-to-r from-red-600 to-red-900 bg-green-600 border-2 border-green-900 hover:from-green-600 hover:to-green-950 text-white text-md px-5 md:px-16 py-3 rounded-full transition duration-300 ${userData?.verify ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
+                                {verifyloading && (
+                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                )}
+                                {verifyloading ? "Verifying..." : "Verify"}
 
                             </button>
                         </div>

@@ -93,7 +93,7 @@ export const otpsend= async(req, res)=>{
         
         res.json({success:true, message:"opt save Success full "})
         
-        let val= await  client.set(`otp:${user.id}`, otp, {EX : 1*60} )
+        let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
         
     } catch (error) {
         res.json({message:error.message, success:false})
@@ -126,7 +126,7 @@ export const verifyEmail= async(req,res)=>{
             }
         });
         
-
+        await client.expire(`otp:${user.id}`, 3)
         await client.set(`token:${user.id}`, JSON.stringify(user),{EX:20*60}) // 20 minit
 
         res.json({success:true, message:"Email verify success", user})
