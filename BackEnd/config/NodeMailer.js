@@ -69,7 +69,7 @@ export const templetOTPMail = (mail, otp) => {
 
 export const templetListingCreate = (id, mail, listing) => {
 
-    const listingUrl = `https://air-bnb-booking-app-psi.vercel.app/${id}`;
+    const listingUrl = `https://roam-hub-eight.vercel.app/${id}`;
 
     return {
         from: "airbnbbookingproject@gmail.com",
@@ -95,8 +95,8 @@ export const templetListingCreate = (id, mail, listing) => {
                     <!-- Image -->
                     <div style="text-align: center; margin: 20px 0;">
                         <img src="${listing?.image?.[0]?.url}" 
-                             alt="listing image" 
-                             style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px;" />
+                            alt="listing image" 
+                            style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px;" />
                     </div>
 
                     <!-- Listing Details -->
