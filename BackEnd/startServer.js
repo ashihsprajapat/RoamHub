@@ -11,14 +11,15 @@ export const startServerF= async()=>{
         console.log("Connect to claudinary")
 
         await client.connect()
-        .then(()=>console.log("Connecting to redis"))
+        console.log("Connecting to redis")
 
+        await connectToDataBase()
+        console.log("Connect to Database")
 
         await  transport.verify()
         console.log("connect to nodemail ")
 
-        await connectToDataBase()
-        console.log("Connect to Database")
+       
         
     } catch (error) {
         console.log(error)
