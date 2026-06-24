@@ -84,18 +84,21 @@ export const otpsend= async(req, res)=>{
     try {
         const user= req.user;
         const otp = optGernate()
+        let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
 
         const content= templetOTPMail(user.email, otp)
         
         const info = await transport.sendMail(content)
+        console.log("info after sending mail", info)
         if(info.rejected.length  > 0)
             return res.json({message:"Something went wrong", success:false})
         
         res.json({success:true, message:"opt save Success full "})
         
-        let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
+        
         
     } catch (error) {
+        console.log(error)
         res.json({message:error.message, success:false})
     }
 }

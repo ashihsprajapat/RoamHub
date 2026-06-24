@@ -39,6 +39,7 @@ const VerifyEmail = () => {
         try {
             setOtpLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/sendOTP`, {}, { headers: { authorization: `Bearer ${userToken}` } })
+            console.log("data after send otp", data)
             if (data.success) {
                 toast.success(data.message)
                 setTimeLeft(180)
@@ -60,6 +61,7 @@ const VerifyEmail = () => {
             e.preventDefault()
             setVerifyLoading(true);
             const { data } = await axios.post(`${backendUrl}/auth/verifyOtp`, { otp: otp }, { headers: { authorization: `Bearer ${userToken}` } })
+            console.log("data after verify otp", data)
             if (data.success) {
                 setUserData(data.user);
                 toast.success(data.message)
