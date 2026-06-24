@@ -87,6 +87,9 @@ export const otpsend= async(req, res)=>{
         let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
         console.log("send email and otp is --->", otp)
         const content= templetOTPMail(user.email, otp)
+
+        const result= await transport.verify();
+        console.log("VERIFY RESULT:", result);
         
         const info = await transport.sendMail(content)
         console.log("info after sending mail", info)
