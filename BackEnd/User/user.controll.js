@@ -85,7 +85,7 @@ export const otpsend= async(req, res)=>{
         const user= req.user;
         const otp = optGernate()
         let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
-
+        console.log("send email and otp is --->", otp)
         const content= templetOTPMail(user.email, otp)
         
         const info = await transport.sendMail(content)
@@ -98,7 +98,7 @@ export const otpsend= async(req, res)=>{
         
         
     } catch (error) {
-        console.log(error)
+        console.log("email error occurr which is ------->",error)
         res.json({message:error.message, success:false})
     }
 }
