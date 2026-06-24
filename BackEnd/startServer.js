@@ -1,6 +1,5 @@
 import connectToCloudinary from "./config/cloundinary.js"
 import connectToDataBase from "./config/mongooseDB.js"
-import { transport } from "./config/NodeMailer.js"
 import client from "./config/Redis.js"
 
 
@@ -16,12 +15,8 @@ export const startServerF= async()=>{
         await connectToDataBase()
         console.log("Connect to Database")
 
-        await  transport.verify()
-        console.log("connect to nodemail ")
-
-       
         
     } catch (error) {
-        console.log(error)
+        console.log("error in starter ",error)
     }
 }

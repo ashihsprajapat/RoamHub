@@ -12,6 +12,5 @@ async function connectToDataBase() {
     await mongoose.connect(`${Url}/air-bnb-Project`);
 }
 
-    
 
     export default  connectToDataBase;

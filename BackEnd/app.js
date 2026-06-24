@@ -57,10 +57,7 @@ import { startServerF } from "./startServer.js";
 await startServerF()
 
 
-
 app.get("/", (req, res) => { res.send( "Api is working fine" ) })
-
-
 
 
 //routes for listing

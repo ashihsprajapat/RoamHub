@@ -3,14 +3,15 @@ import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 dotenv.config()
 
-export   const transport= nodemailer.createTransport({
-    service: "gmail",
-    secure:true,
-    auth: {
-        user: process.env.NodeMail,
-        pass : process.env.NodeMailPassword
-    }
-})
+export const transport = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.NodeMail,
+    pass: process.env.NodeMailPassword
+  }
+});
 
 export const templetOTPMail = (mail, otp) => {
     return {
