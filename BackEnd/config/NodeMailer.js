@@ -3,14 +3,19 @@ import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 dotenv.config()
 
+let passw= process.env.NodeMailPassword
+let user= process.env.NodeMail
+
+console.log(  "user is",user ,  "  passw = ", passw)
+
 export const transport = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.NodeMail,
-    pass: process.env.NodeMailPassword
-  }
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+        user ,
+        pass: passw
+    }
 });
 
 export const templetOTPMail = (mail, otp) => {
