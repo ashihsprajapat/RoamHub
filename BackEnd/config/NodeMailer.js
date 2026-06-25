@@ -11,15 +11,15 @@ let user= process.env.NodeMail
 
 export const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
+    port: 465,
     secure: false,
     auth: {
         user: process.env.NodeMail,
         pass: process.env.NodeMailPassword
     },
-    lookup(hostname, options, callback) {
-        return dns.lookup(hostname, { family: 4 }, callback);
-    }
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
 });
 
 export const templetOTPMail = (mail, otp) => {
