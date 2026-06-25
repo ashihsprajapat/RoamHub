@@ -1,20 +1,24 @@
 
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import dns from "node:dns";
 dotenv.config()
+
+dns.setDefaultResultOrder("ipv4first")
 
 let passw= process.env.NodeMailPassword
 let user= process.env.NodeMail
-
-console.log(  "user is",user ,  "  passw = ", passw)
 
 export const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
-        user ,
-        pass: passw
+        user: process.env.NodeMail,
+        pass: process.env.NodeMailPassword
+    },
+    lookup(hostname, options, callback) {
+        return dns.lookup(hostname, { family: 4 }, callback);
     }
 });
 
