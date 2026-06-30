@@ -4,7 +4,6 @@ import Home from './Features/Listing/Pages/home';
 import ProfileShow from './Features/Profile/Pages/profilesShow';
 import HostPage from './pages/HostPage';
 
-import { Toaster } from 'react-hot-toast';
 import { useLocation } from 'react-router-dom'
 import Navbar from './components/Common/Navbar';
 import Footer from './components/Common/Footer';
@@ -17,6 +16,7 @@ import EditListing from './Features/Listing/Pages/EditListing';
 import AllBookingListingProfile from './Features/Booking/Page/AllBookingListingProfile';
 import SelectedListing from './Features/Listing/Pages/SelectedListing';
 import SelectListingDashboard from './Features/Listing/Pages/SelectListingDashboard';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
 
@@ -59,9 +59,12 @@ function App() {
 
       </Routes>
 
-      <Toaster
+      <ToastContainer
         position="bottom-left"
-        reverseOrder={false}
+        autoClose={3000}
+        newestOnTop
+        theme="colored"
+        style={{ zIndex: 999999 }}
       />
       <Footer />
     </>

@@ -23,22 +23,18 @@ model User {
   isPhoneVerified     Boolean   @default(false)
   phoneOtp            String?
   phoneValidTime      DateTime?
-  bookings    Booking[]
-
-  reviews Review[]
+  bookings            Booking[]
+  reviews             Review[]
 }
 
 model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String   @db.VarChar(500)
-  
-  listingId String
-
   userId    String
-  user User @relation( fields:[userId], references:[id]  )
-
+  listingId String
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
@@ -51,8 +47,7 @@ model Transaction {
   paymentType   String?
   userId        String
   listingId     String
-  booking    Booking?  
-      
+  booking       Booking?
 }
 
 model Guest {
@@ -62,35 +57,34 @@ model Guest {
   gender     String
   adharLast4 String?
   bookingId  String
-  booking Booking @relation(fields:[bookingId], references:[id] )
-  }
+  booking    Booking @relation(fields: [bookingId], references: [id])
+}
 
 model Booking {
-  id            String        @id @default(uuid())
-  listingId     String
-  from          DateTime?
-  to            DateTime?
-  totalAmount    Decimal       @db.Decimal(10, 2)
-  paymentStatus PaymentStatus @default(PENDING)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now()) @updatedAt
-
-  ownerId       String
-  user          User          @relation(fields: [ownerId], references: [id])
-
-  
-  guests        Guest[]  
-
-  transactionId String @unique
-  transaction   Transaction  @relation(fields : [transactionId], references:[id])
-
-  TotalNights Int
+  id             String        @id @default(uuid())
+  ownerId        String
+  listingId      String
+  from           DateTime?
+  to             DateTime?
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now()) @updatedAt
+  TotalNights    Int
   pernightCharge Int
+  totalAmount    Decimal       @db.Decimal(10, 2)
+  transactionId  String        @unique
+  listingAddress String        @default("")
+  listingImage   String        @default("")
+  listingTitle   String        @default("")
+  user           User          @relation(fields: [ownerId], references: [id])
+  transaction    Transaction   @relation(fields: [transactionId], references: [id])
+  guests         Guest[]
+}
 
-  listingTitle String @default("")
-  listingAddress String @default("")
-  listingImage String @default("")
-
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
 }
 
 enum PaymentStatus {

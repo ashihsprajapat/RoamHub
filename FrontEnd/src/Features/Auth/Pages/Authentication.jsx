@@ -1,9 +1,9 @@
 
 
 import { assets } from '../../../assets/assets';
-import toast from 'react-hot-toast';
 import { useAuth } from '../Hooks/useAuth';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 
 function Authentication() {
@@ -22,20 +22,21 @@ function Authentication() {
         setIsLoading(true);
         try {
 
-            let data = await Authentication(email, password, name);
-         
+            let { data } = await Authentication(email, password, name);
+
             if (data.success) {
                 localStorage.setItem("air_bnb_token", data.token);
-                navigate("/")
                 setUserToken(data.token)
-                toast.success("login successfull")
+                navigate("/")
+                toast.success(data.message)
+
+
             } else {
                 toast.error(data.message)
-                setEmail("");
             }
 
         } catch (err) {
-            toast.error(err.message);
+            toast.error(err.response.data.message)
 
         } finally {
             setIsLoading(false);

@@ -30,7 +30,7 @@ export const protectListing = async (req, res, next) => {
             req.user= JSON.parse(cachedUser)
             return next();
         }
-        const user = await prisma.user.findUnique({where : {id : decode.id}})
+        const user = await prisma.user.findFirst({where : {id : decode.id}})
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         

@@ -57,13 +57,8 @@ import { startServerF } from "./startServer.js";
 await startServerF()
 
 
-transport.verify((err, success) => {
-    if (err) {
-        console.log("SMTP Verify Error:", err);
-    } else {
-        console.log("SMTP Server Ready");
-    }
-});
+
+
 
 
 app.get("/", (req, res) => { res.send( "Api is working fine" ) })

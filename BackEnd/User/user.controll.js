@@ -8,6 +8,7 @@ import { optGernate } from './../utils/optGererate.js';
 import { transport , templetOTPMail } from '../config/NodeMailer.js';
 import client from '../config/Redis.js';
 import { prisma } from '../lib/prisma.js';
+import { resend } from '../config/Resend.js';
 
 
 //user register
@@ -48,24 +49,28 @@ export const userRegister = async (req, res) => {
 //login
 export const userLogin = async (req, res) => {
 
+    
     const { email, password } = req.body;
 
     try {
-        const user = await prisma.user.findUnique({where:{email}})
+        const user = await prisma.user.findFirst({where:{email}});
+        console.log(user)
         if (!user)
             return res.status(400).json({ success: false, message: "email not exist" })
+      
 
         const match = await bcrypt.compare(password, user.password);
         if (!match)
             return res.json({ success: false, message: "wrong password" })
         
-        
+        console.log(match)
         res.status(200).json({
             success: true,
             message: "Login success full",
             token: generateToekn(user.id),
         })
     } catch (err) {
+        console.log(err)
         res.status(500).json({ success: false, message: err.message });
     }
 
@@ -85,17 +90,23 @@ export const otpsend= async(req, res)=>{
         const otp = optGernate()
         let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
         console.log("send email and otp is --->", otp)
+
+
         const content= templetOTPMail(user.email, otp)
 
-        const result= await transport.verify();
-        console.log("VERIFY RESULT:", result);
+    
         
-        const info = await transport.sendMail(content)
-        console.log("info after sending mail", info)
-        if(info.rejected.length  > 0)
-            return res.json({message:"Something went wrong", success:false})
+        const { data, error } = await resend.emails.send(content);
+
+        if (error) {
+            console.log("eror in sending email ", error)
+            return res.status(400).json({ error });
+        }
+
+    // res.status(200).json({ data });
+    console.log("data after sending email", data)
         
-        res.json({success:true, message:"opt save Success full "})
+        res.json({success:true, data,  message:"opt save Success full "})
         
         
         
