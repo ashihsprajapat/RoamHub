@@ -54,7 +54,7 @@ export function AuthProvider(props) {
         } else {
             response = await registerUser(email, password, name);
         }
-        return response.data;
+        return response;
 
     }
 

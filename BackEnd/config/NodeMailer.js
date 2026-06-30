@@ -24,7 +24,7 @@ export const transport = nodemailer.createTransport({
 
 export const templetOTPMail = (mail, otp) => {
     return {
-        from: "airbnbbookingproject@gmail.com",
+        from: "Acme <onboarding@resend.dev>",
         to: mail,
         subject: "Verify Your Email - Airbnb Booking",
         html: `
