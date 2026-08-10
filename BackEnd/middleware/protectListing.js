@@ -30,7 +30,9 @@ export const protectListing = async (req, res, next) => {
             req.user= JSON.parse(cachedUser)
             return next();
         }
-        const user = await prisma.user.findFirst({where : {id : decode.id}})
+        
+        const user = await prisma.user.findUnique({ where: { id: decode.id } });
+
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         
@@ -40,7 +42,7 @@ export const protectListing = async (req, res, next) => {
         if(user.verify)
             await client.set(`token:${user.id}`, JSON.stringify(userWithoutPassword),{EX:20*60 })
 
-        next();
+        next();  
     } catch (err) {
         console.log(err)
         res.json({ success: false, message: err.message });
@@ -56,7 +58,8 @@ export const verifyEmail=async(req,res,next)=>{
         }
         next();
     } catch (error) {   
-        
+        console.log(error)
+        res.json({message:error.message, success:false})
     }
 }
 
