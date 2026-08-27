@@ -21,12 +21,17 @@ export const userRegister = async (req, res) => {
 
     
     try {
+        // validate input
+        if (!email || !password || !name) {
+            return res.status(400).json({ success: false, message: 'name, email and password are required' });
+        }
     
         const user = await prisma.user.findUnique({
-            where:{ email}
+            where: { email: email }
         })
         if (user)
             return res.status(400).json({ success: false, message: "email is already exist" })
+        
         const hashpassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create ({
@@ -62,15 +67,17 @@ export const userLogin = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await prisma.user.findFirst({where:{email}});
-      
+        if (!email || !password)
+            return res.status(400).json({ success: false, message: 'email and password are required' })
+
+        const user = await prisma.user.findUnique({ where: { email: email } });
         if (!user)
             return res.status(400).json({ success: false, message: "email not exist" })
       
 
         const match = await bcrypt.compare(password, user.password);
         if (!match)
-            return res.json({ success: false, message: "wrong password" })
+            return res.status(400).json({ success: false, message: "wrong password" })
         
       
         res.status(200).json({
