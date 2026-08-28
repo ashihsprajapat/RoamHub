@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "nodemon app.js",
-    "dev": "nodemon app.js"
+    "run": "node app.js",
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
-  "keywords": []
-  ,
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
