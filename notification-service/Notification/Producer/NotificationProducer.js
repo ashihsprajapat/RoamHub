@@ -20,5 +20,5 @@ export  class NotificationProducer{
             throw error;
         }
     }
-}
+};
 

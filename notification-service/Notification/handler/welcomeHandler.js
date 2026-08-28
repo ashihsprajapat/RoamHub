@@ -22,4 +22,4 @@ export const loginSuccessHandler = async ({ email, name }) => {
         subject: "New login to your RoamHub account",
         html: loginSuccessTemplate(name)
     });
-};
+}

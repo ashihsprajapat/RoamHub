@@ -8,7 +8,7 @@ export class NotificationConsumer {
 
     async start(){
         try {
-            await admin.connect();
+            await admin.connect()
             await admin.createTopics({
                 waitForLeaders: true,
                 topics: [{ topic: topic.NOTIFICATION_TOPIC, numPartitions: 1, replicationFactor: 1 }]

@@ -20,7 +20,7 @@ app.listen(PORT, () => {
 });
 
 
-const notificationConsumer = new NotificationConsumer();
+const notificationConsumer = new NotificationConsumer()
 await notificationConsumer.start().then(() => {
     console.log("Notification Consumer started successfully");      
 }).catch((error) => {

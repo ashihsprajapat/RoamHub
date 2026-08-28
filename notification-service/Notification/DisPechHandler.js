@@ -61,6 +61,6 @@ export const disPechHandler = async (event) => {
                     break;
             
         default :
-            console.log("type is not found ")
+            console.log("type is not found ");
     }
 }

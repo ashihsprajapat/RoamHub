@@ -54,7 +54,7 @@ export const sendNotificationEmail = async ({ email, type, otp, name }) => {
 		subject,
 		html
 	});
-};
+}
 
 
 export const loginSuccessTemplate = (name = "there") => emailLayout(

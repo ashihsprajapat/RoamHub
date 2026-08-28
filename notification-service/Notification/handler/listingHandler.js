@@ -6,4 +6,4 @@ export const listingCreateHandler= async(data)=>{
 
 export const listingUpdateHandler= async(data)=>{
     console.log("data after listing update", data)
-}
+};

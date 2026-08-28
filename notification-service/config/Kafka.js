@@ -6,7 +6,7 @@ dotenv.config();
 dns.setDefaultResultOrder("ipv4first");
 
 let broker = process.env.KAFKA_BROKER;
-console.log("broker", broker);
+console.log("broker", broker)
 
 export const kafka = new Kafka({
     clientId: "roamhub-backend",

@@ -7,4 +7,4 @@ export const bookingCreatedHandler= async(data)=>{
 export const bookingCencellHandler= async(data)=>{
     console.log("data in Booking cancel handler function ",data)
 
-}
+};

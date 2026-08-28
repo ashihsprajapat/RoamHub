@@ -13,5 +13,5 @@ test('resolveHandler returns the matching handler for a notification type', () =
 
 test('resolveHandler accepts an event object and reads its type field', () => {
     const handler = resolveHandler({ type: notificationTypes.WELCOME_EMAIL });
-    assert.equal(handler, wellComeHandler);
+    assert.equal(handler, wellComeHandler)
 });

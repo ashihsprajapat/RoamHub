@@ -18,4 +18,4 @@ export const notificationTypes= Object.freeze({
 
     DELETE_LISTING: "DELETE_LISTING"
 
-})
+});

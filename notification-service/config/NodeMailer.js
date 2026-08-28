@@ -7,7 +7,7 @@ dotenv.config()
 dns.setDefaultResultOrder("ipv4first")
 
 let passw= process.env.NodeMailPassword
-let user= process.env.NodeMail
+let user= process.env.NodeMail ;
 
 export const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
