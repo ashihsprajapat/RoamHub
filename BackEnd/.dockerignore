@@ -1,4 +1,5 @@
-.env
+
 node_modules
-/generated/prisma
+npm-debug.log
+.env
 pgConnect.json

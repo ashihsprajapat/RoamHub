@@ -44,9 +44,7 @@ app.use(cors({
 }));
 const port = process.env.PORT || 3030;
 
-app.listen(port, () => {
-  console.log("app is listening on port", port);
-})
+
 
 import connectToDataBase from "./config/mongooseDB.js";
 import bookingRout from "./Booking/booking.rout.js";
@@ -56,10 +54,9 @@ import { startServerF } from "./startServer.js";
 
 await startServerF()
 
-
-
-
-
+app.listen(port, () => {
+  console.log("app is listening on port", port);
+})
 
 app.get("/", (req, res) => { res.send( "Api is working fine" ) })
 
@@ -80,3 +77,6 @@ app.use("/booking",  protectListing, verifyEmail,  bookingRout)
 
 app.use("/transaction", protectListing, verifyEmail,   transactionRoute)
 
+function addsume(a, b){
+    return 
+}

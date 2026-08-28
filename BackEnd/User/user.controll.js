@@ -9,6 +9,9 @@ import { transport , templetOTPMail } from '../config/NodeMailer.js';
 import client from '../config/Redis.js';
 import { prisma } from '../lib/prisma.js';
 import { resend } from '../config/Resend.js';
+import { NotificationProducer } from '../Notification/Producer/NotificationProducer.js';
+import { producer } from '../config/Kafka.js';
+import { notificationTypes } from '../Notification/Event/notificationTypes.js';
 
 
 //user register
@@ -18,12 +21,17 @@ export const userRegister = async (req, res) => {
 
     
     try {
+        // validate input
+        if (!email || !password || !name) {
+            return res.status(400).json({ success: false, message: 'name, email and password are required' });
+        }
     
         const user = await prisma.user.findUnique({
-            where:{ email}
+            where: { email: email }
         })
         if (user)
             return res.status(400).json({ success: false, message: "email is already exist" })
+        
         const hashpassword = await bcrypt.hash(password, 10);
 
         const newUser = await prisma.user.create ({
@@ -35,7 +43,13 @@ export const userRegister = async (req, res) => {
             
         })
 
-        
+        const producer= new NotificationProducer();
+        const event = {
+            email: newUser.email,
+            type : notificationTypes.WELCOME_EMAIL
+        }
+        await producer.publish(event);
+
         res.status(201).json({ success: true, message: "user register successfull", token: generateToekn(newUser.id) })
 
     } catch (err) {
@@ -53,17 +67,19 @@ export const userLogin = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await prisma.user.findFirst({where:{email}});
-        console.log(user)
+        if (!email || !password)
+            return res.status(400).json({ success: false, message: 'email and password are required' })
+
+        const user = await prisma.user.findUnique({ where: { email: email } });
         if (!user)
             return res.status(400).json({ success: false, message: "email not exist" })
       
 
         const match = await bcrypt.compare(password, user.password);
         if (!match)
-            return res.json({ success: false, message: "wrong password" })
+            return res.status(400).json({ success: false, message: "wrong password" })
         
-        console.log(match)
+      
         res.status(200).json({
             success: true,
             message: "Login success full",
@@ -88,27 +104,22 @@ export const otpsend= async(req, res)=>{
     try {
         const user= req.user;
         const otp = optGernate()
+
+        const producer= new NotificationProducer();
+        console.log("public in kafka")
+        const event = {
+            otp,
+            email: user.email,
+            type : notificationTypes.SEND_OTP
+        }
+        await producer.publish(event);
+        console.log("event is publshed in kafka", event)
+
         let val= await  client.set(`otp:${user.id}`, otp, {EX : 3*60} )
         console.log("send email and otp is --->", otp)
 
-
-        const content= templetOTPMail(user.email, otp)
-
-    
         
-        const { data, error } = await resend.emails.send(content);
-
-        if (error) {
-            console.log("eror in sending email ", error)
-            return res.status(400).json({ error });
-        }
-
-    // res.status(200).json({ data });
-    console.log("data after sending email", data)
-        
-        res.json({success:true, data,  message:"opt save Success full "})
-        
-        
+        res.json({success:true,   message:"opt save Success full "})
         
     } catch (error) {
         console.log("email error occurr which is ------->",error)
@@ -144,6 +155,13 @@ export const verifyEmail= async(req,res)=>{
         
         await client.expire(`otp:${user.id}`, 3)
         await client.set(`token:${user.id}`, JSON.stringify(user),{EX:20*60}) // 20 minit
+
+        const producer= new NotificationProducer();
+        const event = {
+            email: user.email,
+            type : notificationTypes.VERIFY_EMAIL
+        }
+        await producer.publish(event);
 
         res.json({success:true, message:"Email verify success", user})
         
